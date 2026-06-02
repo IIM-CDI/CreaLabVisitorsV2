@@ -1,0 +1,58 @@
+name: Release Tag
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - closed
+
+permissions:
+  contents: write
+
+jobs:
+  bump-and-tag:
+    if: github.event.pull_request.merged == true && github.event.pull_request.head.ref == 'develop'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Configure Git user
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Determine release type from PR labels
+        id: release_type
+        run: |
+          RELEASE_TYPE="patch"
+
+          if ${{ contains(github.event.pull_request.labels.*.name, 'release:major') }}; then
+            RELEASE_TYPE="major"
+          elif ${{ contains(github.event.pull_request.labels.*.name, 'release:minor') }}; then
+            RELEASE_TYPE="minor"
+          elif ${{ contains(github.event.pull_request.labels.*.name, 'release:patch') }}; then
+            RELEASE_TYPE="patch"
+          fi
+
+          echo "bump=$RELEASE_TYPE" >> "$GITHUB_OUTPUT"
+          echo "Selected release type: $RELEASE_TYPE"
+
+      - name: Bump version
+        run: |
+          npm version ${{ steps.release_type.outputs.bump }} -m "chore(release): %s [skip ci]"
+
+      - name: Push commit and tag
+        run: |
+          git push origin main
+          git push origin --tags
