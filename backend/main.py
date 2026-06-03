@@ -36,9 +36,15 @@ async def root():
 
 @app.post("/user/")
 async def create_user(email: str, password: str):
+    if not email:
+        return {"message": "Email is required"}
     if not verify_email(email):
         return {"message": "Invalid email address"}
+    if supabase.table("CreaLab_visitors").select("*").eq("email", email).execute().data:
+        return {"message": "User already exists"}
     prenom, nom = get_prenom_nom(email)
+    if not password:
+        return {"message": "Password is required"}
     hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
     role = get_role(email)
     supabase.table("CreaLab_visitors").insert({"first_name": prenom, "last_name": nom, "email": email, "password": hashed_password, "role": role}).execute()
@@ -67,6 +73,16 @@ async def update_user(email: str, new_password: str):
     hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
     supabase.table("CreaLab_visitors").update({"password": hashed_password}).eq("email", email).execute()
     return {"message": "Password updated"}
+
+@app.delete("/user/")
+async def delete_user(email: str):
+    if not email:
+        return {"message": "Email is required"}
+    response = supabase.table("CreaLab_visitors").select("*").eq("email", email).execute()
+    if not response.data:
+        return {"message": "User not found"}
+    supabase.table("CreaLab_visitors").delete().eq("email", email).execute()
+    return {"message": "User deleted"}
 
 #ROUTES EVENEMENTS
 
