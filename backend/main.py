@@ -116,15 +116,3 @@ async def delete_event(event_id: int):
         return {"message": "Event not found"}
     supabase.table("CreaLab_events").delete().eq("id", event_id).execute()
     return {"message": "Event deleted"}
-
-
-# import bcrypt
-# pw = b'GeekPassword'
-# s = bcrypt.gensalt()
-# h = bcrypt.hashpw(pw, s) # Hash password
-# entered_pw = b'GeekPassword'
-
-# if bcrypt.checkpw(entered_pw, h):
-#     print("Password match!")
-# else:
-#     print("Incorrect password.")
