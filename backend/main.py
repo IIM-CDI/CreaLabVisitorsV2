@@ -31,11 +31,20 @@ def get_prenom_nom(email: str) -> tuple[str, str]:
 def time_to_str(time) -> str:
     return time.strftime("%Y-%m-%dT%H:%M:%S")
 
-#ROUTES UTILISATEURS
+#ROUTES HEALTH
 
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
+
+#ROUTES UTILISATEURS
+
+@app.get("/user/{email}")
+async def get_user(email: str):
+    response = supabase.table("CreaLab_visitors").select("*").eq("email", email).execute()
+    if not response.data:
+        return {"message": "User not found"}
+    return {"user": response.data[0]}
 
 @app.post("/user/")
 async def create_user(email: str, password: str):
@@ -107,7 +116,7 @@ async def get_events():
     response = supabase.table("CreaLab_events").select("*").execute()
     return {"events": response.data}
 
-@app.delete("/event/")
+@app.delete("/event/{event_id}")
 async def delete_event(event_id: int):
     if not event_id:
         return {"message": "Event ID is required"}
@@ -116,3 +125,13 @@ async def delete_event(event_id: int):
         return {"message": "Event not found"}
     supabase.table("CreaLab_events").delete().eq("id", event_id).execute()
     return {"message": "Event deleted"}
+
+@app.put("/event/{event_id}/accept/")
+async def update_event(event_id: int):
+    if not event_id:
+        return {"message": "Event ID is required"}
+    response = supabase.table("CreaLab_events").select("*").eq("id", event_id).execute()
+    if not response.data:
+        return {"message": "Event not found"}
+    supabase.table("CreaLab_events").update({"accepted": True}).eq("id", event_id).execute()
+    return {"message": "Event updated"}
