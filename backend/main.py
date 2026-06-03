@@ -28,6 +28,9 @@ def get_prenom_nom(email: str) -> tuple[str, str]:
     prenom, nom = prenom_nom.split(".")
     return prenom.capitalize(), nom.capitalize()
 
+def time_to_str(time) -> str:
+    return time.strftime("%Y-%m-%dT%H:%M:%S")
+
 #ROUTES UTILISATEURS
 
 @app.get("/")
@@ -86,9 +89,33 @@ async def delete_user(email: str):
 
 #ROUTES EVENEMENTS
 
+@app.post("/event/")
+async def create_event(title:str, user_mail:str, start:str, end:str, color:str):
+    if not title or not user_mail or not start or not end or not color:
+        return {"message": "All fields are required"}
+    if end <= start:
+        return {"message": "End time must be after start time"}
+    response = supabase.table("CreaLab_visitors").select("first_name", "last_name").eq("email", user_mail).execute()
+    if not response.data:
+        return {"message": "User not found"}
+    user = response.data[0]
+    supabase.table("CreaLab_events").insert({"title": title, "user": user, "user_mail": user_mail, "start": start, "startStr": time_to_str(start), "end": end, "endStr": time_to_str(end), "duration": end - start, "color": color, "accepted": False}).execute()
+    return {"message": "Event created"}
 
+@app.get("/events/")
+async def get_events():
+    response = supabase.table("CreaLab_events").select("*").execute()
+    return {"events": response.data}
 
-
+@app.delete("/event/")
+async def delete_event(event_id: int):
+    if not event_id:
+        return {"message": "Event ID is required"}
+    response = supabase.table("CreaLab_events").select("*").eq("id", event_id).execute()
+    if not response.data:
+        return {"message": "Event not found"}
+    supabase.table("CreaLab_events").delete().eq("id", event_id).execute()
+    return {"message": "Event deleted"}
 
 
 # import bcrypt
