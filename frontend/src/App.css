@@ -1,16 +1,16 @@
 .App {
-  text-align: center;
+    text-align: center;
 }
 
 .background {
-  background: url('../public/Parc.jpg') no-repeat center fixed;
-  background-size: cover;
-  position: fixed;
-  z-index: -1;
-  height: 100%;
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  filter: blur(3px);
+    background: url('../public/Parc.jpg') no-repeat center fixed;
+    background-size: cover;
+    position: fixed;
+    z-index: -1;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    filter: blur(3px);
 }

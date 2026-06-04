@@ -1,7 +1,7 @@
-.button{
+.button {
     background-color: var(--primary-color);
     border: none;
-    padding: 15px 32px;
+    padding: 4px 10px;
     text-align: center;
     text-decoration: none;
     display: inline-block;
@@ -15,6 +15,11 @@
     border: 2px solid var(--primary-color);
 }
 
+.button:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--primary-color);
+}
+
 .button-secondary {
     background-color: var(--secondary-color);
     color: var(--dark-text-color);
@@ -24,6 +29,11 @@
     background-color: var(--hover-color);
     color: var(--dark-text-color);
     border: 2px solid var(--secondary-color);
+}
+
+.button-secondary:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--secondary-color);
 }
 
 .button-accept {
@@ -37,6 +47,11 @@
     border: 2px solid var(--accept-color);
 }
 
+.button-accept:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--accept-color);
+}
+
 .button-danger {
     background-color: var(--cancel-color);
     color: var(--light-text-color);
@@ -48,7 +63,12 @@
     border: 2px solid var(--cancel-color);
 }
 
-.button-text{
+.button-danger:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--cancel-color);
+}
+
+.button-text {
     color: var(--light-text-color);
     font-size: 1rem;
 }
