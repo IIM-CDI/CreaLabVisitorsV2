@@ -7,6 +7,16 @@
   font-family: 'Lato', sans-serif;
 }
 
+:root {
+  --primary-color: #2872A1;
+  --secondary-color: #CBDDE9;
+  --accept-color: #4CAF50;
+  --cancel-color: #f44336;
+  --hover-color: #ffffff;
+  --light-text-color: #ffffff;
+  --dark-text-color: #333333;
+}
+
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;

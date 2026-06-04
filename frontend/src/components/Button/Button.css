@@ -1,0 +1,54 @@
+.button{
+    background-color: var(--primary-color);
+    border: none;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    margin: 4px 2px;
+    cursor: pointer;
+}
+
+.button:hover {
+    background-color: var(--hover-color);
+    color: var(--primary-color);
+    border: 2px solid var(--primary-color);
+}
+
+.button-secondary {
+    background-color: var(--secondary-color);
+    color: var(--dark-text-color);
+}
+
+.button-secondary:hover {
+    background-color: var(--hover-color);
+    color: var(--dark-text-color);
+    border: 2px solid var(--secondary-color);
+}
+
+.button-accept {
+    background-color: var(--accept-color);
+    color: var(--light-text-color);
+}
+
+.button-accept:hover {
+    background-color: var(--hover-color);
+    color: var(--light-text-color);
+    border: 2px solid var(--accept-color);
+}
+
+.button-danger {
+    background-color: var(--cancel-color);
+    color: var(--light-text-color);
+}
+
+.button-danger:hover {
+    background-color: var(--hover-color);
+    color: var(--light-text-color);
+    border: 2px solid var(--cancel-color);
+}
+
+.button-text{
+    color: var(--light-text-color);
+    font-size: 1rem;
+}
