@@ -32,7 +32,7 @@ const RegisterForm = () => {
 
     return (
         <div className="register-form">
-            <h2>Register</h2>
+            <h2>Inscription</h2>
             <form className="register-form-fields" onSubmit={handleSubmit}>
                 <TextInput
                     type="email"
