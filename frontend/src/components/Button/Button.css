@@ -1,74 +1,65 @@
 .button {
-    background-color: var(--primary-color);
     border: none;
-    padding: 4px 10px;
+    padding: 10px 20px;
     text-align: center;
     text-decoration: none;
     display: inline-block;
+    font-size: 16px;
     margin: 4px 2px;
     cursor: pointer;
+    border-radius: 4px;
+    width: 100%;
+    transition: background-color 0.3s ease;
+}
+
+.button-primary {
+    background-color: #007bff;
+    color: white;
 }
 
 .button:hover {
-    background-color: var(--hover-color);
-    color: var(--primary-color);
-    border: 2px solid var(--primary-color);
+    background-color: #0056b3;
 }
 
-.button:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px var(--primary-color);
+.button:active {
+    background-color: #004494;
 }
 
 .button-secondary {
-    background-color: var(--secondary-color);
-    color: var(--dark-text-color);
+    background-color: #cccccc;
+    color: #333;
 }
 
 .button-secondary:hover {
-    background-color: var(--hover-color);
-    color: var(--dark-text-color);
-    border: 2px solid var(--secondary-color);
+    background-color: #bbbbbb;
 }
 
-.button-secondary:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px var(--secondary-color);
-}
-
-.button-accept {
-    background-color: var(--accept-color);
-    color: var(--light-text-color);
-}
-
-.button-accept:hover {
-    background-color: var(--hover-color);
-    color: var(--light-text-color);
-    border: 2px solid var(--accept-color);
-}
-
-.button-accept:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px var(--accept-color);
+.button-secondary:active {
+    background-color: #aaaaaa;
 }
 
 .button-danger {
-    background-color: var(--cancel-color);
-    color: var(--light-text-color);
+    background-color: #dc3545;
+    color: white;
 }
 
 .button-danger:hover {
-    background-color: var(--hover-color);
-    color: var(--light-text-color);
-    border: 2px solid var(--cancel-color);
+    background-color: #c8234e;
 }
 
-.button-danger:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px var(--cancel-color);
+.button-danger:active {
+    background-color: #bd2130;
 }
 
-.button-text {
-    color: var(--light-text-color);
-    font-size: 1rem;
+.button-accept {
+    background-color: #28a745;
+    color: white;
+}
+
+.button-accept:hover {
+    background-color: #218838;
+}
+
+.button-accept:active {
+    background-color: #1e7e34;
 }

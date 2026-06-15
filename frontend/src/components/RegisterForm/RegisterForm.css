@@ -1,0 +1,25 @@
+.register-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    gap: 10px;
+    width: 100%;
+}
+
+.register-form-fields {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    gap: 5px;
+    width: 80%;
+}
+
+.error-message {
+    color: red;
+    padding-inline: 5px;
+    width: 80%;
+}

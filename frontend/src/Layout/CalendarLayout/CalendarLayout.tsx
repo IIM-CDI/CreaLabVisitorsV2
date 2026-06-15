@@ -4,7 +4,7 @@ import './CalendarLayout.css';
 const CalendarLayout = () => {
     return (
         <div className="calendar-layout">
-            <h1>Calendar Layout</h1>
+            <h1>C</h1>
         </div>
     );
 };

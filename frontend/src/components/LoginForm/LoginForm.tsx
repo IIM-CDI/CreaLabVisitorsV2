@@ -1,11 +1,10 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import './LoginForm.css';
 
 import TextInput from '../TextInput/TextInput';
 import Button from '../Button/Button';
 
 const LoginForm = () => {
-
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
@@ -25,7 +24,7 @@ const LoginForm = () => {
         }
 
         setErrorMessage('');
-    }
+    };
 
     return (
         <div className="login-form">
@@ -52,6 +51,6 @@ const LoginForm = () => {
             {errorMessage && <p className="error-message">{errorMessage}</p>}
         </div>
     );
-}
+};
 
 export default LoginForm;
