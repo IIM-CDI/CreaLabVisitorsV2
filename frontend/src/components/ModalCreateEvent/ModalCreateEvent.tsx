@@ -65,8 +65,8 @@ const ModalCreateEvent = ({ isOpen, onClose, onEventChange, userMail }: ModalCre
                     <Input required label="Description" value={eventDescription} onChange={(value: string) => setEventDescription(value)} />
                     <Input required label="Couleur" type="color" value={color} onChange={(value: string) => setColor(value)} />
                     <div className="modal-buttons">
-                        <Button type="submit" text="Créer"  />
-                        <Button type="button" onClick={handleClose} text="Annuler" />
+                        <Button type="submit" component_type='primary' text="Créer"  />
+                        <Button type="button" component_type='danger' onClick={handleClose} text="Annuler" />
                     </div>
                 </form>
             </div>

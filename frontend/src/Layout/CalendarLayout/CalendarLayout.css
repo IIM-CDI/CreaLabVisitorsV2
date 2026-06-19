@@ -119,7 +119,7 @@
 }
 
 .fc-timegrid-slot {
-    height: 35px !important;
+    height: 36px !important;
     border-color: #ebebeb !important;
 }
 
@@ -242,4 +242,30 @@
 
 .fc-view-harness {
     height: 100% !important;
+}
+
+
+.open-modal-button-container {
+    position: absolute;
+    bottom: 55px;
+    right: 60px;
+
+    z-index: 1001;
+}
+
+.open-modal-button {
+    background-color: #3b82f6;
+    color: #ffffff;
+    border: none;
+    border-radius: 9999px;
+    padding: 12px 24px;
+    font-size: 2.5rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: filter 0.15s, transform 0.2s;
+}
+
+.open-modal-button:hover {
+    filter: brightness(0.93);
+    transform: scale(1.25);
 }

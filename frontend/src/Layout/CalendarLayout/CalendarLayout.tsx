@@ -3,6 +3,7 @@ import Fullcalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
+import frLocale from '@fullcalendar/core/locales/fr';
 import './CalendarLayout.css';
 
 import ModalCreateEvent from '../../components/ModalCreateEvent/ModalCreateEvent';
@@ -45,6 +46,7 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
         editable: true,
         selectable: true,
         weekends: false,
+        locale: frLocale,
     };
 
     return (
@@ -59,10 +61,12 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
                     {...calendarConfig}
                 />
             </div>
-
-            <div className="open-modal-button">
-                <button type="button" onClick={() => setIsModalOpen(true)}>+</button>
-            </div>
+            
+            {!isModalOpen && (
+                <div className="open-modal-button-container">
+                    <button className="open-modal-button" type="button" onClick={() => setIsModalOpen(true)}>+</button>
+                </div>
+            )}
             {isModalOpen && (
                 <ModalCreateEvent
                     isOpen={isModalOpen}
