@@ -12,9 +12,17 @@ interface ModalCreateEventProps {
     userMail: string;
 }
 
-const ModalCreateEvent = ({ isOpen, onClose, onEventChange, userMail }: ModalCreateEventProps) => {
-
-    const { handleClose, handleBackdropClick } = useModalManager({ isOpen, onClose, onEventChange });
+const ModalCreateEvent = ({
+    isOpen,
+    onClose,
+    onEventChange,
+    userMail,
+}: ModalCreateEventProps) => {
+    const { handleClose, handleBackdropClick } = useModalManager({
+        isOpen,
+        onClose,
+        onEventChange,
+    });
 
     const [eventTitle, setEventTitle] = useState('');
     const [eventDateStart, setEventDateStart] = useState('');
@@ -31,7 +39,7 @@ const ModalCreateEvent = ({ isOpen, onClose, onEventChange, userMail }: ModalCre
             end: eventDateEnd,
             description: eventDescription,
             color: color,
-            userMail: userMail
+            userMail: userMail,
         });
 
         const eventData = {
@@ -41,7 +49,7 @@ const ModalCreateEvent = ({ isOpen, onClose, onEventChange, userMail }: ModalCre
             description: eventDescription,
             color: color,
             userMail: userMail,
-            accepted: false
+            accepted: false,
         };
 
         //add backend later
@@ -49,8 +57,7 @@ const ModalCreateEvent = ({ isOpen, onClose, onEventChange, userMail }: ModalCre
         handleClose();
 
         return eventData;
-
-    }
+    };
 
     if (!isOpen) return null;
 
@@ -59,20 +66,56 @@ const ModalCreateEvent = ({ isOpen, onClose, onEventChange, userMail }: ModalCre
             <div className="modal-content">
                 <h2>Créer un événement</h2>
                 <form onSubmit={handleSubmit}>
-                    <Input required label="Titre" value={eventTitle} onChange={(value: string) => setEventTitle(value)} />
-                    <Input required label="Date de début" type="datetime-local" value={eventDateStart} onChange={(value: string) => setEventDateStart(value)} />
-                    <Input required label="Date de fin" type="datetime-local" value={eventDateEnd} onChange={(value: string) => setEventDateEnd(value)} />
-                    <Input required label="Description" value={eventDescription} onChange={(value: string) => setEventDescription(value)} />
-                    <Input required label="Couleur" type="color" value={color} onChange={(value: string) => setColor(value)} />
+                    <Input
+                        required
+                        label="Titre"
+                        value={eventTitle}
+                        onChange={(value: string) => setEventTitle(value)}
+                    />
+                    <Input
+                        required
+                        label="Date de début"
+                        type="datetime-local"
+                        value={eventDateStart}
+                        onChange={(value: string) => setEventDateStart(value)}
+                    />
+                    <Input
+                        required
+                        label="Date de fin"
+                        type="datetime-local"
+                        value={eventDateEnd}
+                        onChange={(value: string) => setEventDateEnd(value)}
+                    />
+                    <Input
+                        required
+                        label="Description"
+                        value={eventDescription}
+                        onChange={(value: string) => setEventDescription(value)}
+                    />
+                    <Input
+                        required
+                        label="Couleur"
+                        type="color"
+                        value={color}
+                        onChange={(value: string) => setColor(value)}
+                    />
                     <div className="modal-buttons">
-                        <Button type="submit" component_type='primary' text="Créer"  />
-                        <Button type="button" component_type='danger' onClick={handleClose} text="Annuler" />
+                        <Button
+                            type="submit"
+                            component_type="primary"
+                            text="Créer"
+                        />
+                        <Button
+                            type="button"
+                            component_type="danger"
+                            onClick={handleClose}
+                            text="Annuler"
+                        />
                     </div>
                 </form>
             </div>
         </div>
     );
-
-}
+};
 
 export default ModalCreateEvent;

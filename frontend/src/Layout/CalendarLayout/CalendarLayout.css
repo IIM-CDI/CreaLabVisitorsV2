@@ -45,7 +45,9 @@
     font-size: 0.875rem;
     border-radius: 20px !important;
     padding: 6px 16px !important;
-    transition: filter 0.15s, background-color 0.15s;
+    transition:
+        filter 0.15s,
+        background-color 0.15s;
     box-shadow: none !important;
 }
 
@@ -144,7 +146,9 @@
     border: none !important;
     border-radius: 8px !important;
     cursor: pointer;
-    transition: filter 0.15s, transform 0.1s;
+    transition:
+        filter 0.15s,
+        transform 0.1s;
     padding: 4px 6px !important;
 }
 
@@ -243,7 +247,6 @@
     height: 100% !important;
 }
 
-
 .open-modal-button-container {
     position: absolute;
     bottom: 55px;
@@ -261,7 +264,9 @@
     font-size: 2.5rem;
     font-weight: 700;
     cursor: pointer;
-    transition: filter 0.15s, transform 0.2s;
+    transition:
+        filter 0.15s,
+        transform 0.2s;
 }
 
 .open-modal-button:hover {

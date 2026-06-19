@@ -1,12 +1,15 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import './App.css';
 
 import LoginLayout from './Layout/LoginLayout/LoginLayout';
 import CalendarLayout from './Layout/CalendarLayout/CalendarLayout';
 
 function App() {
-
-    const [user, setUser] = useState(localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!) : null);
+    const [user, setUser] = useState(
+        localStorage.getItem('user')
+            ? JSON.parse(localStorage.getItem('user')!)
+            : null
+    );
 
     return (
         <div className="App">

@@ -6,17 +6,24 @@ interface UseModalManagerProps {
     onEventChange?: () => void;
 }
 
-export const useModalManager = ({ isOpen, onClose, onEventChange }: UseModalManagerProps) => {
+export const useModalManager = ({
+    isOpen,
+    onClose,
+    onEventChange,
+}: UseModalManagerProps) => {
     const handleClose = useCallback(() => {
         onClose();
         if (onEventChange) onEventChange();
     }, [onClose, onEventChange]);
 
-    const handleBackdropClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-        if (e.target === e.currentTarget) {
-            handleClose();
-        }
-    }, [handleClose]);
+    const handleBackdropClick = useCallback(
+        (e: React.MouseEvent<HTMLDivElement>) => {
+            if (e.target === e.currentTarget) {
+                handleClose();
+            }
+        },
+        [handleClose]
+    );
 
     useEffect(() => {
         const handleEscapeKey = (e: KeyboardEvent) => {
