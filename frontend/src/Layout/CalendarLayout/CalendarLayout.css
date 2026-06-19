@@ -10,10 +10,9 @@
 
 .navbar {
     width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 20px;
+    display: grid;
+    grid-template-columns: 1fr 6fr 1fr;
+    padding-bottom: 20px;
 }
 
 .calendar-container {

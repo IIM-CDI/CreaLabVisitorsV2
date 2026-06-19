@@ -7,6 +7,7 @@ import frLocale from '@fullcalendar/core/locales/fr';
 import './CalendarLayout.css';
 
 import ModalCreateEvent from '../../components/ModalCreateEvent/ModalCreateEvent';
+import Button from '../../components/Button/Button';
 
 interface CalendarLayoutProps {
     user: { email: string; name: string };
@@ -49,10 +50,17 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
         locale: frLocale,
     };
 
+    const handleDeconnect = () => {
+        localStorage.setItem('user', JSON.stringify(null));
+        window.location.reload();
+    };
+
     return (
         <div className="calendar-layout">
             <div className="navbar">
+                <div></div>
                 <h1>Bienvenue au CreaLab {user.name}</h1>
+                <Button type="button" component_type='danger' onClick={handleDeconnect} text="Déconnexion" />
             </div>
             
             <div className="calendar-container">
