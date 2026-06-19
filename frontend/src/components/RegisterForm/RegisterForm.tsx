@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import './RegisterForm.css';
-import TextInput from '../TextInput/TextInput';
+import Input from '../Input/Input';
 import Button from '../Button/Button';
 
 const RegisterForm = () => {
@@ -34,7 +34,7 @@ const RegisterForm = () => {
         <div className="register-form">
             <h2>Inscription</h2>
             <form className="register-form-fields" onSubmit={handleSubmit}>
-                <TextInput
+                <Input
                     type="email"
                     label="adresse mail"
                     value={email}
@@ -42,7 +42,7 @@ const RegisterForm = () => {
                     onChange={(e) => setEmail(e)}
                     required
                 />
-                <TextInput
+                <Input
                     type="password"
                     label="mot de passe"
                     value={password}
@@ -50,7 +50,7 @@ const RegisterForm = () => {
                     onChange={(e) => setPassword(e)}
                     required
                 />
-                <TextInput
+                <Input
                     type="password"
                     label="confirmer mot de passe"
                     value={confirmPassword}

@@ -1,15 +1,19 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Fullcalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import './CalendarLayout.css';
 
+import ModalCreateEvent from '../../components/ModalCreateEvent/ModalCreateEvent';
+
 interface CalendarLayoutProps {
-    user: string;
+    user: { email: string; name: string };
 }
 
 const CalendarLayout = ({ user }: CalendarLayoutProps) => {
+
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     const calendarConfig = {
         headerToolbar: {
@@ -46,7 +50,7 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
     return (
         <div className="calendar-layout">
             <div className="navbar">
-                <h1>Bienvenue au CreaLab {user}</h1>
+                <h1>Bienvenue au CreaLab {user.name}</h1>
             </div>
             
             <div className="calendar-container">
@@ -55,6 +59,17 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
                     {...calendarConfig}
                 />
             </div>
+
+            <div className="open-modal-button">
+                <button type="button" onClick={() => setIsModalOpen(true)}>+</button>
+            </div>
+            {isModalOpen && (
+                <ModalCreateEvent
+                    isOpen={isModalOpen}
+                    onClose={() => setIsModalOpen(false)}
+                    userMail={user.email}
+                />
+            )}
         </div>
     );
 };

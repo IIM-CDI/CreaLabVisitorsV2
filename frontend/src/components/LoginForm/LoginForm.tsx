@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './LoginForm.css';
 
-import TextInput from '../TextInput/TextInput';
+import Input from '../Input/Input';
 import Button from '../Button/Button';
 
 const LoginForm = () => {
@@ -30,7 +30,7 @@ const LoginForm = () => {
         <div className="login-form">
             <h2>Connexion</h2>
             <form className="login-form-fields" onSubmit={handleSubmit}>
-                <TextInput
+                <Input
                     type="email"
                     label="adresse mail"
                     value={email}
@@ -38,7 +38,7 @@ const LoginForm = () => {
                     placeholder="mail@devinci.fr"
                     required
                 />
-                <TextInput
+                <Input
                     type="password"
                     label="mot de passe"
                     value={password}

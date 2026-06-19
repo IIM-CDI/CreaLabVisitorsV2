@@ -1,34 +1,31 @@
 import React from 'react';
-import './TextInput.css';
+import './Input.css';
 
-interface TextInputProps {
+interface InputProps {
     label: string;
     value: string;
-    defaultValue?: string;
-    type?: 'text' | 'password' | 'email';
+    type?: 'text' | 'password' | 'email' | 'datetime-local' | 'color';
     required?: boolean;
     placeholder?: string;
     className?: string;
     onChange: (value: string) => void;
 }
 
-const TextInput = ({
+const Input = ({
     label,
     value,
-    defaultValue = '',
     type = 'text',
     required = false,
     placeholder = '',
     className = '',
     onChange,
-}: TextInputProps) => {
+}: InputProps) => {
     return (
         <div className={`text-input ${className}`}>
             <label className="text-input-label">{label}</label>
             <input
                 type={type}
                 value={value}
-                defaultValue={defaultValue}
                 placeholder={placeholder}
                 onChange={(e) => onChange(e.target.value)}
                 className="text-input-field"
@@ -38,4 +35,4 @@ const TextInput = ({
     );
 };
 
-export default TextInput;
+export default Input;
