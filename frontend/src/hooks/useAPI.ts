@@ -7,7 +7,8 @@ export const useApi = () => {
 
     const getHeaders = useCallback(() => {
         const headers: Record<string, string> = { 
-            "Content-Type": "application/json" 
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*"
         };
         return headers;
     }, []);

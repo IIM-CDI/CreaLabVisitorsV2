@@ -4,6 +4,7 @@ import { useModalManager } from '../../hooks/useModelManager';
 import { useState } from 'react';
 import Input from '../Input/Input';
 import Button from '../Button/Button';
+import { useApi } from '../../hooks/useAPI';
 
 interface ModalCreateEventProps {
     isOpen: boolean;
@@ -18,6 +19,7 @@ const ModalCreateEvent = ({
     onEventChange,
     userMail,
 }: ModalCreateEventProps) => {
+    const { getApiUrl, getHeaders } = useApi();
     const { handleClose, handleBackdropClick } = useModalManager({
         isOpen,
         onClose,
@@ -33,30 +35,28 @@ const ModalCreateEvent = ({
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
-        console.log('Event Created:', {
-            title: eventTitle,
-            start: eventDateStart,
-            end: eventDateEnd,
-            description: eventDescription,
-            color: color,
-            userMail: userMail,
-        });
+        const params = new URLSearchParams();
+        params.append('title', eventTitle);
+        params.append('description', eventDescription);
+        params.append('user_mail', userMail);
+        params.append('start', eventDateStart);
+        params.append('end', eventDateEnd);
+        params.append('color', color);
 
-        const eventData = {
-            title: eventTitle,
-            start: eventDateStart,
-            end: eventDateEnd,
-            description: eventDescription,
-            color: color,
-            userMail: userMail,
-            accepted: false,
-        };
-
-        //add backend later
-
-        handleClose();
-
-        return eventData;
+        fetch(`${getApiUrl()}/event/?${params.toString()}`, {
+            method: 'POST',
+            headers: getHeaders(),
+        })
+            .then((response) => response.json())
+            .then((data) => {
+                if (onEventChange) {
+                    onEventChange();
+                }
+                handleClose();
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
     };
 
     if (!isOpen) return null;
@@ -74,6 +74,12 @@ const ModalCreateEvent = ({
                     />
                     <Input
                         required
+                        label="Description"
+                        value={eventDescription}
+                        onChange={(value: string) => setEventDescription(value)}
+                    />
+                    <Input
+                        required
                         label="Date de début"
                         type="datetime-local"
                         value={eventDateStart}
@@ -85,12 +91,6 @@ const ModalCreateEvent = ({
                         type="datetime-local"
                         value={eventDateEnd}
                         onChange={(value: string) => setEventDateEnd(value)}
-                    />
-                    <Input
-                        required
-                        label="Description"
-                        value={eventDescription}
-                        onChange={(value: string) => setEventDescription(value)}
                     />
                     <Input
                         required

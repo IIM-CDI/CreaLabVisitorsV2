@@ -4,6 +4,7 @@ from supabase import create_client
 from dotenv import load_dotenv
 import bcrypt
 import os
+from datetime import datetime
 
 #INITITLAISATION
 
@@ -13,10 +14,12 @@ app = FastAPI()
 
 FRONTEND_URL = os.getenv("FRONTEND_URL")
 
+allow_origins = [FRONTEND_URL] if FRONTEND_URL else ["http://localhost:3000"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[FRONTEND_URL],
-    allow_credentials=True,
+    allow_origins=allow_origins,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -110,17 +113,24 @@ async def delete_user(email: str):
 #ROUTES EVENEMENTS
 
 @app.post("/event/")
-async def create_event(title:str, user_mail:str, start:str, end:str, color:str):
-    if not title or not user_mail or not start or not end or not color:
+async def create_event(title:str,description:str, user_mail:str, start:str, end:str, color:str):
+    if not title or not description or not user_mail or not start or not end or not color:
         return {"message": "All fields are required"}
-    if end <= start:
+    try:
+        start_dt = datetime.fromisoformat(start)
+        end_dt = datetime.fromisoformat(end)
+    except ValueError:
+        return {"message": "Invalid date format"}
+    if end_dt <= start_dt:
         return {"message": "End time must be after start time"}
     response = supabase.table("CreaLab_visitors").select("first_name", "last_name").eq("email", user_mail).execute()
     if not response.data:
         return {"message": "User not found"}
-    user = response.data[0]
-    supabase.table("CreaLab_events").insert({"title": title, "user": user, "user_mail": user_mail, "start": start, "startStr": time_to_str(start), "end": end, "endStr": time_to_str(end), "duration": end - start, "color": color, "accepted": False}).execute()
-    return {"message": "Event created"}
+    user = response.data[0].get("first_name") + " " + response.data[0].get("last_name")
+    id_response = supabase.table("CreaLab_events").select("id").order("id", desc=True).limit(1).execute()
+    next_id = 1 if not id_response.data else int(id_response.data[0]["id"]) + 1
+    supabase.table("CreaLab_events").insert({"id": next_id, "title": title, "description": description, "user": user, "user_mail": user_mail, "start": start, "startStr": time_to_str(start_dt), "end": end, "endStr": time_to_str(end_dt), "duration": str(end_dt - start_dt), "color": color, "accepted": False}).execute()
+    return {"message": "Event created", "id": next_id}
 
 @app.get("/events/")
 async def get_events():
