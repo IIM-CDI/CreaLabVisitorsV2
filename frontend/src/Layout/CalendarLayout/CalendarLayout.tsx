@@ -10,11 +10,20 @@ import ModalCreateEvent from '../../components/ModalCreateEvent/ModalCreateEvent
 import Button from '../../components/Button/Button';
 
 interface CalendarLayoutProps {
-    user: { email: string; name: string };
+    user: { email: string };
 }
 
 const CalendarLayout = ({ user }: CalendarLayoutProps) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const emailToName = (email: string) => {
+        const namePart = email.split('@')[0];
+        const nameWithSpaces = namePart.replace('.', ' ');
+        return nameWithSpaces
+            .split(' ')
+            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+    };
 
     const calendarConfig = {
         headerToolbar: {
@@ -58,7 +67,7 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
         <div className="calendar-layout">
             <div className="navbar">
                 <div></div>
-                <h1>Bienvenue au CreaLab {user.name}</h1>
+                <h1>Bienvenue au CreaLab {emailToName(user.email)}</h1>
                 <Button
                     type="button"
                     component_type="danger"

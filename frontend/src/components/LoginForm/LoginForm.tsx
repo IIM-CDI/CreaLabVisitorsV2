@@ -3,9 +3,11 @@ import './LoginForm.css';
 
 import Input from '../Input/Input';
 import Button from '../Button/Button';
+import { useApi } from '../../hooks/useAPI';
 
 const LoginForm = () => {
-    const [email, setEmail] = useState('');
+    const { getApiUrl, getHeaders } = useApi();
+    const [email, setEmail] = useState(localStorage.getItem('mail') || '');
     const [password, setPassword] = useState('');
 
     const [errorMessage, setErrorMessage] = useState('');
@@ -14,14 +16,36 @@ const LoginForm = () => {
         e.preventDefault();
 
         if (
-            '@devinci.fr' !== email.split('@')[1] &&
-            '@edu.devinci.fr' !== email.split('@')[1]
+            'devinci.fr' !== email.split('@')[1] &&
+            'edu.devinci.fr' !== email.split('@')[1]
         ) {
             setErrorMessage(
                 'Veuillez utiliser une adresse email devinci.fr ou edu.devinci.fr.'
             );
             return;
         }
+
+        const params = new URLSearchParams();
+        params.append('email', email);
+        params.append('password', password);
+
+        fetch(`${getApiUrl()}/login/?${params.toString()}`, {
+            method: 'POST',
+            headers: getHeaders(),
+        })
+            .then((response) => response.json())
+            .then(() => {
+                localStorage.setItem('user', JSON.stringify({ email }));
+                localStorage.setItem('mail', email);
+                setEmail('');
+                setPassword('');
+                setErrorMessage('');
+                window.location.reload();
+            })
+            .catch((error) => {
+                setErrorMessage(error instanceof Error ? error.message : 'Erreur lors de la connexion.');
+            });
+
 
         setErrorMessage('');
     };

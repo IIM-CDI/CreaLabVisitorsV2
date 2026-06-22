@@ -5,11 +5,11 @@ import LoginLayout from './Layout/LoginLayout/LoginLayout';
 import CalendarLayout from './Layout/CalendarLayout/CalendarLayout';
 
 function App() {
-    const [user, setUser] = useState(
+    const user = 
         localStorage.getItem('user')
             ? JSON.parse(localStorage.getItem('user')!)
             : null
-    );
+        ;
 
     return (
         <div className="App">
