@@ -12,6 +12,7 @@
     width: 100%;
     display: grid;
     grid-template-columns: 1fr 6fr 1fr;
+    align-items: center;
     padding-bottom: 20px;
 }
 

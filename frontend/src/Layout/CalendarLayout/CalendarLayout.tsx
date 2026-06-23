@@ -6,6 +6,7 @@ import interactionPlugin from '@fullcalendar/interaction';
 import frLocale from '@fullcalendar/core/locales/fr';
 import './CalendarLayout.css';
 
+import ModalValidateEvent from '../../components/ModalValidateEvent/ModalValidateEvent';
 import ModalCreateEvent from '../../components/ModalCreateEvent/ModalCreateEvent';
 import Button from '../../components/Button/Button';
 import { useApi } from '../../hooks/useAPI';
@@ -16,6 +17,7 @@ interface CalendarLayoutProps {
 
 const CalendarLayout = ({ user }: CalendarLayoutProps) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isValidateModalOpen, setIsValidateModalOpen] = useState(false);
     const [events, setEvents] = useState<any[]>([]);
     const { getApiUrl, getHeaders } = useApi();
 
@@ -71,10 +73,12 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
         const data = await response.json();
 
         const events = data.events.map((event: any) => ({
+            id: event.id,
             title: event.title,
             start: event.start,
             end: event.end,
-            color: event.accepted ? event.color : '#676767',
+            color: event.accepted === true ? event.color : '#676767',
+            accepted: event.accepted,
         }));
 
         setEvents(events);
@@ -104,7 +108,21 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
     return (
         <div className="calendar-layout">
             <div className="navbar">
-                <div></div>
+                <div className="open-modal-create-event-button-container">
+                    <Button
+                        component_type="primary"
+                        type="button"
+                        text="Valider les événements"
+                        onClick={() => setIsValidateModalOpen(true)}
+                    />
+                </div>
+            {isValidateModalOpen && (
+                <ModalValidateEvent
+                    isOpen={isValidateModalOpen}
+                    onClose={() => setIsValidateModalOpen(false)}
+                    eventIds={events.filter(event => !event.accepted).map(event => event.id)}
+                />
+            )}
                 <h1>Bienvenue au CreaLab {emailToName(user.email)}</h1>
                 <Button
                     type="button"

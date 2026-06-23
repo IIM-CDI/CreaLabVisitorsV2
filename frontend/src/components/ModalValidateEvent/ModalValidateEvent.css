@@ -1,4 +1,4 @@
-.modal-backdrop-create-event {
+.modal-backdrop-validate-event {
     position: fixed;
     top: 0;
     left: 0;
@@ -11,18 +11,11 @@
     z-index: 1000;
 }
 
-.modal-content-create-event {
+.modal-content-validate-event {
     background-color: #ffffff;
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     width: 400px;
     max-width: 90%;
-}
-
-.modal-buttons {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-top: 20px;
 }

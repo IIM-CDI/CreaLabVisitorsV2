@@ -137,7 +137,7 @@ async def get_events():
     response = supabase.table("CreaLab_events").select("*").execute()
     return {"events": response.data}
 
-@app.delete("/event/{event_id}")
+@app.delete("/event/reject/{event_id}")
 async def delete_event(event_id: int):
     if not event_id:
         return {"message": "Event ID is required"}
@@ -147,7 +147,7 @@ async def delete_event(event_id: int):
     supabase.table("CreaLab_events").delete().eq("id", event_id).execute()
     return {"message": "Event deleted"}
 
-@app.put("/event/{event_id}/accept/")
+@app.put("/event/validate/{event_id}")
 async def update_event(event_id: int):
     if not event_id:
         return {"message": "Event ID is required"}
