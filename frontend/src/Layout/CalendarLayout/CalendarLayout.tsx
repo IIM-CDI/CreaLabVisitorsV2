@@ -20,6 +20,20 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
     const [isValidateModalOpen, setIsValidateModalOpen] = useState(false);
     const [events, setEvents] = useState<any[]>([]);
     const { getApiUrl, getHeaders } = useApi();
+    const [isAdmin, setIsAdmin] = useState(false);
+
+    async function checkAdminStatus() {
+        const response = await fetch(`${getApiUrl()}/user/${user.email}`, {
+            method: 'GET',
+            headers: getHeaders(),
+        });
+        const data = await response.json();
+        setIsAdmin(data.user.admin);
+    }
+
+    useEffect(() => {
+        checkAdminStatus();
+    }, [user.email]);
 
     const emailToName = (email: string) => {
         const namePart = email.split('@')[0];
@@ -29,6 +43,7 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
             .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
             .join(' ');
     };
+
 
     const calendarConfig = {
         headerToolbar: {
@@ -73,6 +88,7 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
         const events = data.events.map((event: any) => ({
             id: event.id,
             title: event.title,
+            description: event.description,
             start: event.start,
             end: event.end,
             color: event.accepted === true ? event.color : '#676767',
@@ -106,12 +122,14 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
         <div className="calendar-layout">
             <div className="navbar">
                 <div className="open-modal-create-event-button-container">
-                    <Button
-                        component_type="primary"
-                        type="button"
-                        text="Valider les événements"
-                        onClick={() => setIsValidateModalOpen(true)}
-                    />
+                    {isAdmin && (
+                        <Button
+                            component_type="primary"
+                            type="button"
+                            text="Valider les événements"
+                            onClick={() => setIsValidateModalOpen(true)}
+                        />
+                    )}
                 </div>
                 {isValidateModalOpen && (
                     <ModalValidateEvent

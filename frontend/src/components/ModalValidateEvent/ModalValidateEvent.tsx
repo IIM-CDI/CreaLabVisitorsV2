@@ -33,6 +33,8 @@ const ModalValidateEvent = ({
             .catch((error) => {
                 console.error('Error:', error);
             });
+
+        window.location.reload();
     };
 
     const handleRejectEvent = (eventId: string) => {
@@ -44,6 +46,8 @@ const ModalValidateEvent = ({
             .catch((error) => {
                 console.error('Error:', error);
             });
+
+        window.location.reload();
     };
 
     return (
