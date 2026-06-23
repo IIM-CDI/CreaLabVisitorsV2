@@ -63,8 +63,6 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
         locale: frLocale,
     };
 
-
-
     async function fetchEvents() {
         const response = await fetch(`${getApiUrl()}/events/`, {
             method: 'GET',
@@ -85,15 +83,14 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
         return events;
     }
 
-    useEffect(() => {fetchEvents()}, [isModalOpen]);
-
+    useEffect(() => {
+        fetchEvents();
+    }, [isModalOpen]);
 
     const handleDeconnect = () => {
         localStorage.setItem('user', JSON.stringify(null));
         window.location.reload();
     };
-
-
 
     async function autoDeconnect() {
         localStorage.removeItem('user');
@@ -116,13 +113,15 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
                         onClick={() => setIsValidateModalOpen(true)}
                     />
                 </div>
-            {isValidateModalOpen && (
-                <ModalValidateEvent
-                    isOpen={isValidateModalOpen}
-                    onClose={() => setIsValidateModalOpen(false)}
-                    eventIds={events.filter(event => !event.accepted).map(event => event.id)}
-                />
-            )}
+                {isValidateModalOpen && (
+                    <ModalValidateEvent
+                        isOpen={isValidateModalOpen}
+                        onClose={() => setIsValidateModalOpen(false)}
+                        eventIds={events
+                            .filter((event) => !event.accepted)
+                            .map((event) => event.id)}
+                    />
+                )}
                 <h1>Bienvenue au CreaLab {emailToName(user.email)}</h1>
                 <Button
                     type="button"
@@ -136,7 +135,7 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
                 <Fullcalendar
                     plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
                     {...calendarConfig}
-                    events= {events}
+                    events={events}
                 />
             </div>
 

@@ -1,8 +1,8 @@
 import React from 'react';
-import './ModalValidateEvent.css'
+import './ModalValidateEvent.css';
 import { useModalManager } from '../../hooks/useModelManager';
 import Button from '../Button/Button';
-import {useApi} from '../../hooks/useAPI';
+import { useApi } from '../../hooks/useAPI';
 
 interface ModalValidateEventProps {
     isOpen: boolean;
@@ -47,10 +47,13 @@ const ModalValidateEvent = ({
     };
 
     return (
-        <div className={`modal-backdrop-validate-event ${isOpen ? 'open' : ''}`} onClick={handleBackdropClick}>
+        <div
+            className={`modal-backdrop-validate-event ${isOpen ? 'open' : ''}`}
+            onClick={handleBackdropClick}
+        >
             <div className="modal-content-validate-event">
                 <h2>Valider les événements</h2>
-                {eventIds.map((eventId,index) => (
+                {eventIds.map((eventId, index) => (
                     <div key={index} className="event-item">
                         <p>Événement ID: {eventId}</p>
                         <Button
@@ -65,7 +68,11 @@ const ModalValidateEvent = ({
                         />
                     </div>
                 ))}
-                <Button component_type="secondary" text="Fermer" onClick={handleClose} />
+                <Button
+                    component_type="secondary"
+                    text="Fermer"
+                    onClick={handleClose}
+                />
             </div>
         </div>
     );

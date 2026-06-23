@@ -35,19 +35,26 @@ const RegisterForm = () => {
             params.append('email', email);
             params.append('password', password);
 
-            const response = await fetch(`${getApiUrl()}/user/?${params.toString()}`, {
-                method: 'POST',
-                headers: getHeaders(),
-            });
+            const response = await fetch(
+                `${getApiUrl()}/user/?${params.toString()}`,
+                {
+                    method: 'POST',
+                    headers: getHeaders(),
+                }
+            );
 
             const data = await response.json();
 
             if (!response.ok) {
-                setErrorMessage(data.message || 'Erreur lors de l\'inscription.');
+                setErrorMessage(
+                    data.message || "Erreur lors de l'inscription."
+                );
                 return;
             }
 
-            alert('Inscription réussie ! Vous pouvez maintenant vous connecter.');
+            alert(
+                'Inscription réussie ! Vous pouvez maintenant vous connecter.'
+            );
             localStorage.setItem('mail', email);
             setEmail('');
             setPassword('');
@@ -55,7 +62,11 @@ const RegisterForm = () => {
             setErrorMessage('');
             window.location.reload();
         } catch (error) {
-            setErrorMessage(error instanceof Error ? error.message : 'Erreur lors de l\'inscription.');
+            setErrorMessage(
+                error instanceof Error
+                    ? error.message
+                    : "Erreur lors de l'inscription."
+            );
         }
     };
 

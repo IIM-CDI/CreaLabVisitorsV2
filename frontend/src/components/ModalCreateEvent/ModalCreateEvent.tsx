@@ -62,7 +62,10 @@ const ModalCreateEvent = ({
     if (!isOpen) return null;
 
     return (
-        <div className="modal-backdrop-create-event" onClick={handleBackdropClick}>
+        <div
+            className="modal-backdrop-create-event"
+            onClick={handleBackdropClick}
+        >
             <div className="modal-content-create-event">
                 <h2>Créer un événement</h2>
                 <form onSubmit={handleSubmit}>

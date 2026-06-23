@@ -43,9 +43,12 @@ const LoginForm = () => {
                 window.location.reload();
             })
             .catch((error) => {
-                setErrorMessage(error instanceof Error ? error.message : 'Erreur lors de la connexion.');
+                setErrorMessage(
+                    error instanceof Error
+                        ? error.message
+                        : 'Erreur lors de la connexion.'
+                );
             });
-
 
         setErrorMessage('');
     };
