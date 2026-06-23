@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Fullcalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -8,6 +8,7 @@ import './CalendarLayout.css';
 
 import ModalCreateEvent from '../../components/ModalCreateEvent/ModalCreateEvent';
 import Button from '../../components/Button/Button';
+import { useApi } from '../../hooks/useAPI';
 
 interface CalendarLayoutProps {
     user: { email: string };
@@ -15,6 +16,8 @@ interface CalendarLayoutProps {
 
 const CalendarLayout = ({ user }: CalendarLayoutProps) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [events, setEvents] = useState<any[]>([]);
+    const { getApiUrl, getHeaders } = useApi();
 
     const emailToName = (email: string) => {
         const namePart = email.split('@')[0];
@@ -58,10 +61,45 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
         locale: frLocale,
     };
 
+
+
+    async function fetchEvents() {
+        const response = await fetch(`${getApiUrl()}/events/`, {
+            method: 'GET',
+            headers: getHeaders(),
+        });
+        const data = await response.json();
+
+        const events = data.events.map((event: any) => ({
+            title: event.title,
+            start: event.start,
+            end: event.end,
+            color: event.accepted ? event.color : '#676767',
+        }));
+
+        setEvents(events);
+        return events;
+    }
+
+    useEffect(() => {fetchEvents()}, [isModalOpen]);
+
+
     const handleDeconnect = () => {
         localStorage.setItem('user', JSON.stringify(null));
         window.location.reload();
     };
+
+
+
+    async function autoDeconnect() {
+        localStorage.removeItem('user');
+        window.location.reload();
+    }
+
+    useEffect(() => {
+        const interval = setInterval(autoDeconnect, 300_000);
+        return () => clearInterval(interval);
+    }, []);
 
     return (
         <div className="calendar-layout">
@@ -80,6 +118,7 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
                 <Fullcalendar
                     plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
                     {...calendarConfig}
+                    events= {events}
                 />
             </div>
 
