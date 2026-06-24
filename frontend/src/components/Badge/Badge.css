@@ -1,0 +1,19 @@
+.badge{
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    width: fit-content;
+}
+
+.form{
+    font-size: 0.875rem;
+    font-weight: bold;
+
+    &:hover{
+        cursor: pointer;
+    }
+}
+
+.event{
+    font-size: 0.875rem;
+    font-weight: bold;
+}
