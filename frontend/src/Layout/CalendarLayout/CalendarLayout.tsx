@@ -28,6 +28,7 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
             headers: getHeaders(),
         });
         const data = await response.json();
+        console.log('Admin status:', data);
         setIsAdmin(data.user.admin);
     }
 
@@ -78,6 +79,14 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
         locale: frLocale,
     };
 
+
+    const darkOrLight = (red: number, green: number, blue: number) => {
+    let brightness = (red * 299) + (green * 587) + (blue * 114);
+    brightness /= 255000;
+    return brightness >= 0.5 ? "dark-text" : "light-text";
+    }
+
+
     async function fetchEvents() {
         const response = await fetch(`${getApiUrl()}/events/`, {
             method: 'GET',
@@ -91,8 +100,12 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
             description: event.description,
             start: event.start,
             end: event.end,
-            color: event.accepted === true ? event.color : '#676767',
             accepted: event.accepted,
+            backgroundColor: event.accepted ? event.color : '#676767',
+            textColor: darkOrLight( parseInt(event.color.slice(1, 3), 16),
+                                    parseInt(event.color.slice(3, 5), 16),
+                                    parseInt(event.color.slice(5, 7), 16)
+            ),
         }));
 
         setEvents(events);
@@ -154,6 +167,13 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
                     plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
                     {...calendarConfig}
                     events={events}
+                    eventContent={(arg) => (
+                        <div className="fc-event-content">
+                            <div className="fc-event-title">{arg.event.title}</div>
+                            <div className="fc-event-time">{arg.timeText}</div>
+                            <div className="fc-event-description">{arg.event.extendedProps.description}</div>
+                        </div>
+                    )}
                 />
             </div>
 

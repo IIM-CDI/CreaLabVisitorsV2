@@ -25,15 +25,30 @@ const ModalCreateEvent = ({
         onClose,
         onEventChange,
     });
-
+    const [errorMessage, setErrorMessage] = useState('');
     const [eventTitle, setEventTitle] = useState('');
     const [eventDateStart, setEventDateStart] = useState('');
     const [eventDateEnd, setEventDateEnd] = useState('');
     const [eventDescription, setEventDescription] = useState('');
-    const [color, setColor] = useState('#ffffff');
+    const [color, setColor] = useState('#ff8000');
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+
+        if (!eventTitle || !eventDateStart || !eventDateEnd || !eventDescription) {
+            setErrorMessage('Veuillez remplir tous les champs.');
+            return;
+        }
+
+        if (new Date(eventDateStart) >= new Date(eventDateEnd)) {
+            setErrorMessage("La date de début doit être antérieure à la date de fin.");
+            return;
+        }
+
+        if (new Date(eventDateStart) < new Date()) {
+            setErrorMessage("La date de début doit être dans le futur.");
+            return;
+        }
 
         const params = new URLSearchParams();
         params.append('title', eventTitle);
@@ -68,7 +83,7 @@ const ModalCreateEvent = ({
         >
             <div className="modal-content-create-event">
                 <h2>Créer un événement</h2>
-                <form onSubmit={handleSubmit}>
+                <form className="modal-form" onSubmit={handleSubmit}>
                     <Input
                         required
                         label="Titre"
@@ -81,27 +96,39 @@ const ModalCreateEvent = ({
                         value={eventDescription}
                         onChange={(value: string) => setEventDescription(value)}
                     />
-                    <Input
-                        required
-                        label="Date de début"
-                        type="datetime-local"
-                        value={eventDateStart}
-                        onChange={(value: string) => setEventDateStart(value)}
-                    />
-                    <Input
-                        required
-                        label="Date de fin"
-                        type="datetime-local"
-                        value={eventDateEnd}
-                        onChange={(value: string) => setEventDateEnd(value)}
-                    />
-                    <Input
-                        required
-                        label="Couleur"
-                        type="color"
-                        value={color}
-                        onChange={(value: string) => setColor(value)}
-                    />
+                    <div className="modal-datetime-inputs">
+                        <Input
+                            required
+                            label="Date de début"
+                            type="datetime-local"
+                            value={eventDateStart}
+                            onChange={(value: string) => setEventDateStart(value)}
+                        />
+                        <Input
+                            required
+                            label="Date de fin"
+                            type="datetime-local"
+                            value={eventDateEnd}
+                            onChange={(value: string) => setEventDateEnd(value)}
+                        />
+                    </div>
+                    <div className="modal-color-input-container">
+                        <label htmlFor="color">Couleur de l'événement</label>
+                        <input
+                            className="modal-color-input"
+                            id="color"
+                            type="color"
+                            value={color}
+                            onChange={(e) => setColor(e.target.value)}
+                        />
+                    </div>
+                    <p className='modal-error-text'>
+                        {errorMessage}
+                    </p>
+                    <p className="modal-info-text">
+                        Les événements créés seront visibles par tous.
+                        Ils devront être validés par un administrateur.
+                    </p>
                     <div className="modal-buttons">
                         <Button
                             type="submit"
