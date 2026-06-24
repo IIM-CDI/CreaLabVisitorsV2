@@ -35,18 +35,25 @@ const ModalCreateEvent = ({
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
-        if (!eventTitle || !eventDateStart || !eventDateEnd || !eventDescription) {
+        if (
+            !eventTitle ||
+            !eventDateStart ||
+            !eventDateEnd ||
+            !eventDescription
+        ) {
             setErrorMessage('Veuillez remplir tous les champs.');
             return;
         }
 
         if (new Date(eventDateStart) >= new Date(eventDateEnd)) {
-            setErrorMessage("La date de début doit être antérieure à la date de fin.");
+            setErrorMessage(
+                'La date de début doit être antérieure à la date de fin.'
+            );
             return;
         }
 
         if (new Date(eventDateStart) < new Date()) {
-            setErrorMessage("La date de début doit être dans le futur.");
+            setErrorMessage('La date de début doit être dans le futur.');
             return;
         }
 
@@ -102,7 +109,9 @@ const ModalCreateEvent = ({
                             label="Date de début"
                             type="datetime-local"
                             value={eventDateStart}
-                            onChange={(value: string) => setEventDateStart(value)}
+                            onChange={(value: string) =>
+                                setEventDateStart(value)
+                            }
                         />
                         <Input
                             required
@@ -122,12 +131,10 @@ const ModalCreateEvent = ({
                             onChange={(e) => setColor(e.target.value)}
                         />
                     </div>
-                    <p className='modal-error-text'>
-                        {errorMessage}
-                    </p>
+                    <p className="modal-error-text">{errorMessage}</p>
                     <p className="modal-info-text">
-                        Les événements créés seront visibles par tous.
-                        Ils devront être validés par un administrateur.
+                        Les événements créés seront visibles par tous. Ils
+                        devront être validés par un administrateur.
                     </p>
                     <div className="modal-buttons">
                         <Button

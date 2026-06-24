@@ -20,7 +20,7 @@
     max-width: 90%;
 }
 
-.event-buttons{
+.event-buttons {
     display: flex;
     flex-direction: row;
     justify-content: space-between;

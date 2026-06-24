@@ -45,7 +45,6 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
             .join(' ');
     };
 
-
     const calendarConfig = {
         headerToolbar: {
             left: 'prev,next today',
@@ -79,13 +78,11 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
         locale: frLocale,
     };
 
-
     const darkOrLight = (red: number, green: number, blue: number) => {
-    let brightness = (red * 299) + (green * 587) + (blue * 114);
-    brightness /= 255000;
-    return brightness >= 0.5 ? "dark-text" : "light-text";
-    }
-
+        let brightness = red * 299 + green * 587 + blue * 114;
+        brightness /= 255000;
+        return brightness >= 0.5 ? 'dark-text' : 'light-text';
+    };
 
     async function fetchEvents() {
         const response = await fetch(`${getApiUrl()}/events/`, {
@@ -102,9 +99,10 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
             end: event.end,
             accepted: event.accepted,
             backgroundColor: event.accepted ? event.color : '#676767',
-            textColor: darkOrLight( parseInt(event.color.slice(1, 3), 16),
-                                    parseInt(event.color.slice(3, 5), 16),
-                                    parseInt(event.color.slice(5, 7), 16)
+            textColor: darkOrLight(
+                parseInt(event.color.slice(1, 3), 16),
+                parseInt(event.color.slice(3, 5), 16),
+                parseInt(event.color.slice(5, 7), 16)
             ),
         }));
 
@@ -169,9 +167,13 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
                     events={events}
                     eventContent={(arg) => (
                         <div className="fc-event-content">
-                            <div className="fc-event-title">{arg.event.title}</div>
+                            <div className="fc-event-title">
+                                {arg.event.title}
+                            </div>
                             <div className="fc-event-time">{arg.timeText}</div>
-                            <div className="fc-event-description">{arg.event.extendedProps.description}</div>
+                            <div className="fc-event-description">
+                                {arg.event.extendedProps.description}
+                            </div>
                         </div>
                     )}
                 />
