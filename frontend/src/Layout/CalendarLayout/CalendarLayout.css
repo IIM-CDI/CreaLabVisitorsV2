@@ -12,6 +12,7 @@
     width: 100%;
     display: grid;
     grid-template-columns: 1fr 6fr 1fr;
+    align-items: center;
     padding-bottom: 20px;
 }
 
@@ -165,21 +166,31 @@
     min-width: 0;
 }
 
-.fc-event-time,
-.fc-event-title {
+.fc-event-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.fc-event-time {
     font-weight: 600;
-    color: #1a1a1a;
+    font-size: 0.875rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-.fc-event-time {
-    font-size: 0.72rem;
+.fc-event-title {
+    font-weight: 600;
+    font-size: 1.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.fc-event-title {
-    font-size: 0.8rem;
+.fc-event-description {
+    font-size: 0.875rem;
 }
 
 .fc-timegrid-event .fc-event-main {

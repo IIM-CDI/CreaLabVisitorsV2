@@ -4,6 +4,7 @@ import { useModalManager } from '../../hooks/useModelManager';
 import { useState } from 'react';
 import Input from '../Input/Input';
 import Button from '../Button/Button';
+import { useApi } from '../../hooks/useAPI';
 
 interface ModalCreateEventProps {
     isOpen: boolean;
@@ -18,54 +19,78 @@ const ModalCreateEvent = ({
     onEventChange,
     userMail,
 }: ModalCreateEventProps) => {
+    const { getApiUrl, getHeaders } = useApi();
     const { handleClose, handleBackdropClick } = useModalManager({
         isOpen,
         onClose,
         onEventChange,
     });
-
+    const [errorMessage, setErrorMessage] = useState('');
     const [eventTitle, setEventTitle] = useState('');
     const [eventDateStart, setEventDateStart] = useState('');
     const [eventDateEnd, setEventDateEnd] = useState('');
     const [eventDescription, setEventDescription] = useState('');
-    const [color, setColor] = useState('#ffffff');
+    const [color, setColor] = useState('#ff8000');
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
-        console.log('Event Created:', {
-            title: eventTitle,
-            start: eventDateStart,
-            end: eventDateEnd,
-            description: eventDescription,
-            color: color,
-            userMail: userMail,
-        });
+        if (
+            !eventTitle ||
+            !eventDateStart ||
+            !eventDateEnd ||
+            !eventDescription
+        ) {
+            setErrorMessage('Veuillez remplir tous les champs.');
+            return;
+        }
 
-        const eventData = {
-            title: eventTitle,
-            start: eventDateStart,
-            end: eventDateEnd,
-            description: eventDescription,
-            color: color,
-            userMail: userMail,
-            accepted: false,
-        };
+        if (new Date(eventDateStart) >= new Date(eventDateEnd)) {
+            setErrorMessage(
+                'La date de début doit être antérieure à la date de fin.'
+            );
+            return;
+        }
 
-        //add backend later
+        if (new Date(eventDateStart) < new Date()) {
+            setErrorMessage('La date de début doit être dans le futur.');
+            return;
+        }
 
-        handleClose();
+        const params = new URLSearchParams();
+        params.append('title', eventTitle);
+        params.append('description', eventDescription);
+        params.append('user_mail', userMail);
+        params.append('start', eventDateStart);
+        params.append('end', eventDateEnd);
+        params.append('color', color);
 
-        return eventData;
+        fetch(`${getApiUrl()}/event/?${params.toString()}`, {
+            method: 'POST',
+            headers: getHeaders(),
+        })
+            .then((response) => response.json())
+            .then((data) => {
+                if (onEventChange) {
+                    onEventChange();
+                }
+                handleClose();
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
     };
 
     if (!isOpen) return null;
 
     return (
-        <div className="modal-backdrop" onClick={handleBackdropClick}>
-            <div className="modal-content">
+        <div
+            className="modal-backdrop-create-event"
+            onClick={handleBackdropClick}
+        >
+            <div className="modal-content-create-event">
                 <h2>Créer un événement</h2>
-                <form onSubmit={handleSubmit}>
+                <form className="modal-form" onSubmit={handleSubmit}>
                     <Input
                         required
                         label="Titre"
@@ -74,31 +99,43 @@ const ModalCreateEvent = ({
                     />
                     <Input
                         required
-                        label="Date de début"
-                        type="datetime-local"
-                        value={eventDateStart}
-                        onChange={(value: string) => setEventDateStart(value)}
-                    />
-                    <Input
-                        required
-                        label="Date de fin"
-                        type="datetime-local"
-                        value={eventDateEnd}
-                        onChange={(value: string) => setEventDateEnd(value)}
-                    />
-                    <Input
-                        required
                         label="Description"
                         value={eventDescription}
                         onChange={(value: string) => setEventDescription(value)}
                     />
-                    <Input
-                        required
-                        label="Couleur"
-                        type="color"
-                        value={color}
-                        onChange={(value: string) => setColor(value)}
-                    />
+                    <div className="modal-datetime-inputs">
+                        <Input
+                            required
+                            label="Date de début"
+                            type="datetime-local"
+                            value={eventDateStart}
+                            onChange={(value: string) =>
+                                setEventDateStart(value)
+                            }
+                        />
+                        <Input
+                            required
+                            label="Date de fin"
+                            type="datetime-local"
+                            value={eventDateEnd}
+                            onChange={(value: string) => setEventDateEnd(value)}
+                        />
+                    </div>
+                    <div className="modal-color-input-container">
+                        <label htmlFor="color">Couleur de l'événement</label>
+                        <input
+                            className="modal-color-input"
+                            id="color"
+                            type="color"
+                            value={color}
+                            onChange={(e) => setColor(e.target.value)}
+                        />
+                    </div>
+                    <p className="modal-error-text">{errorMessage}</p>
+                    <p className="modal-info-text">
+                        Les événements créés seront visibles par tous. Ils
+                        devront être validés par un administrateur.
+                    </p>
                     <div className="modal-buttons">
                         <Button
                             type="submit"
