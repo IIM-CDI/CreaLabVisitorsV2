@@ -62,7 +62,7 @@ const LoginForm = () => {
                     label="adresse mail"
                     value={email}
                     onChange={(e) => setEmail(e)}
-                    placeholder="mail@devinci.fr"
+                    placeholder="prenom.nom@edu.devinci.fr"
                     required
                 />
                 <Input

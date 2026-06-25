@@ -12,6 +12,9 @@
 }
 
 .modal-content-validate-event {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
     background-color: #ffffff;
     padding: 20px;
     border-radius: 8px;
@@ -20,9 +23,22 @@
     max-width: 90%;
 }
 
+.event-item{
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 10px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+}
+
+.event-id {
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
 .event-buttons {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-    margin-bottom: 20px;
 }
