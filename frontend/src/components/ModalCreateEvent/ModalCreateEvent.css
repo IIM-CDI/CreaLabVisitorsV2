@@ -1,4 +1,4 @@
-.modal-backdrop {
+.modal-backdrop-create-event {
     position: fixed;
     top: 0;
     left: 0;
@@ -11,7 +11,7 @@
     z-index: 1000;
 }
 
-.modal-content {
+.modal-content-create-event {
     background-color: #ffffff;
     padding: 20px;
     border-radius: 8px;
@@ -20,9 +20,54 @@
     max-width: 90%;
 }
 
+.modal-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
 .modal-buttons {
     display: flex;
     justify-content: flex-end;
     gap: 10px;
-    margin-top: 20px;
+}
+
+.modal-datetime-inputs {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+}
+
+.modal-badge-input-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+    font-weight: bold;
+}
+
+.modal-badge-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.modal-badge-input {
+    width: 50px;
+    height: 50px;
+    padding: 0;
+    border: none;
+    background: none;
+}
+
+.modal-info-text {
+    font-size: 0.9rem;
+    color: #555;
+    font-style: italic;
+}
+
+.modal-error-text {
+    font-size: 1rem;
+    color: red;
+    font-style: italic;
 }
