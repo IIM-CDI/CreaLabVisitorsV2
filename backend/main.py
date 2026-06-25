@@ -113,8 +113,8 @@ async def delete_user(email: str):
 #ROUTES EVENEMENTS
 
 @app.post("/event/")
-async def create_event(title:str,description:str, user_mail:str, start:str, end:str, color:str):
-    if not title or not description or not user_mail or not start or not end or not color:
+async def create_event(title:str,description:str, user_mail:str, start:str, end:str, color:str, badge:str):
+    if not title or not description or not user_mail or not start or not end or not color or not badge:
         return {"message": "All fields are required"}
     try:
         start_dt = datetime.fromisoformat(start)
@@ -129,7 +129,7 @@ async def create_event(title:str,description:str, user_mail:str, start:str, end:
     user = response.data[0].get("first_name") + " " + response.data[0].get("last_name")
     id_response = supabase.table("CreaLab_events").select("id").order("id", desc=True).limit(1).execute()
     next_id = 1 if not id_response.data else int(id_response.data[0]["id"]) + 1
-    supabase.table("CreaLab_events").insert({"id": next_id, "title": title, "description": description, "user": user, "user_mail": user_mail, "start": start, "startStr": time_to_str(start_dt), "end": end, "endStr": time_to_str(end_dt), "duration": str(end_dt - start_dt), "color": color, "accepted": False}).execute()
+    supabase.table("CreaLab_events").insert({"id": next_id, "title": title, "description": description, "user": user, "user_mail": user_mail, "start": start, "startStr": time_to_str(start_dt), "end": end, "endStr": time_to_str(end_dt), "duration": str(end_dt - start_dt), "color": color, "badge": badge, "accepted": False}).execute()
     return {"message": "Event created", "id": next_id}
 
 @app.get("/events/")

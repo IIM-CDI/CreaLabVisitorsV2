@@ -189,8 +189,28 @@
     text-overflow: ellipsis;
 }
 
+.fc-event-badge {
+    font-weight: 600;
+    font-size: 0.875rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: fit-content;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background-color: #eff0f3;
+    border: #1a1a1a 2px solid;
+}
+
 .fc-event-description {
     font-size: 0.875rem;
+    font-style: italic;
+}
+
+.fc-event-user {
+    font-size: 0.875rem;
+    font-style: italic;
+    color: #555;
 }
 
 .fc-timegrid-event .fc-event-main {

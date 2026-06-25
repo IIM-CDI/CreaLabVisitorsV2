@@ -81,7 +81,7 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
     const darkOrLight = (red: number, green: number, blue: number) => {
         let brightness = red * 299 + green * 587 + blue * 114;
         brightness /= 255000;
-        return brightness >= 0.5 ? 'dark-text' : 'light-text';
+        return brightness >= 0.5 ? '#000000' : '#ffffff';
     };
 
     async function fetchEvents() {
@@ -95,6 +95,8 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
             id: event.id,
             title: event.title,
             description: event.description,
+            badge: event.badge,
+            user: event.user,
             start: event.start,
             end: event.end,
             accepted: event.accepted,
@@ -170,9 +172,15 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
                             <div className="fc-event-title">
                                 {arg.event.title}
                             </div>
+                            <div className="fc-event-badge">
+                                {arg.event.extendedProps.badge}
+                            </div>
                             <div className="fc-event-time">{arg.timeText}</div>
                             <div className="fc-event-description">
                                 {arg.event.extendedProps.description}
+                            </div>
+                            <div className="fc-event-user">
+                                {arg.event.extendedProps.user}
                             </div>
                         </div>
                     )}
