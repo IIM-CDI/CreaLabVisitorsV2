@@ -38,7 +38,7 @@
     gap: 10px;
 }
 
-.modal-color-input-container {
+.modal-badge-input-container {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -46,11 +46,13 @@
     font-weight: bold;
 }
 
-input:hover {
-    cursor: pointer;
+.modal-badge-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
 }
 
-.modal-color-input {
+.modal-badge-input {
     width: 50px;
     height: 50px;
     padding: 0;

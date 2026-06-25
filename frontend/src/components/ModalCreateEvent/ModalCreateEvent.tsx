@@ -4,6 +4,7 @@ import { useModalManager } from '../../hooks/useModelManager';
 import { useState } from 'react';
 import Input from '../Input/Input';
 import Button from '../Button/Button';
+import Badge from '../Badge/Badge';
 import { useApi } from '../../hooks/useAPI';
 
 interface ModalCreateEventProps {
@@ -30,7 +31,15 @@ const ModalCreateEvent = ({
     const [eventDateStart, setEventDateStart] = useState('');
     const [eventDateEnd, setEventDateEnd] = useState('');
     const [eventDescription, setEventDescription] = useState('');
-    const [color, setColor] = useState('#ff8000');
+    const [selectedBadge, setSelectedBadge] = useState<string>('');
+
+    const badgesData = [
+        { label: 'Impression perso', color: '#fbd2c9' },
+        { label: 'Impression école', color: '#f9e2b3' },
+        { label: 'Electronique', color: '#b7d5f5' },
+        { label: 'Peinture', color: '#acecde' },
+        { label: 'Autre', color: '#aaaaaa' },
+    ];
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -57,13 +66,25 @@ const ModalCreateEvent = ({
             return;
         }
 
+        if (!selectedBadge) {
+            setErrorMessage("Veuillez sélectionner un label pour l'événement.");
+            return;
+        }
+
+        setErrorMessage('');
+
         const params = new URLSearchParams();
         params.append('title', eventTitle);
         params.append('description', eventDescription);
         params.append('user_mail', userMail);
         params.append('start', eventDateStart);
         params.append('end', eventDateEnd);
-        params.append('color', color);
+        params.append(
+            'color',
+            badgesData.find((badge) => badge.label === selectedBadge)?.color ||
+                ''
+        );
+        params.append('badge', selectedBadge);
 
         fetch(`${getApiUrl()}/event/?${params.toString()}`, {
             method: 'POST',
@@ -121,15 +142,21 @@ const ModalCreateEvent = ({
                             onChange={(value: string) => setEventDateEnd(value)}
                         />
                     </div>
-                    <div className="modal-color-input-container">
-                        <label htmlFor="color">Couleur de l'événement</label>
-                        <input
-                            className="modal-color-input"
-                            id="color"
-                            type="color"
-                            value={color}
-                            onChange={(e) => setColor(e.target.value)}
-                        />
+                    <div className="modal-badge-input-container">
+                        <label htmlFor="badge">Label de l'événement</label>
+                        <div className="modal-badge-container">
+                            {badgesData.map((badge) => (
+                                <Badge
+                                    key={badge.label}
+                                    label={badge.label}
+                                    color={badge.color}
+                                    selected={selectedBadge === badge.label}
+                                    onClick={() =>
+                                        setSelectedBadge(badge.label)
+                                    }
+                                />
+                            ))}
+                        </div>
                     </div>
                     <p className="modal-error-text">{errorMessage}</p>
                     <p className="modal-info-text">
