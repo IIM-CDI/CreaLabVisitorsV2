@@ -78,7 +78,7 @@ const RegisterForm = () => {
                     type="email"
                     label="adresse mail"
                     value={email}
-                    placeholder="thomas@devinci.fr"
+                    placeholder="prenom.nom@edu.devinci.fr"
                     onChange={(e) => setEmail(e)}
                     required
                 />

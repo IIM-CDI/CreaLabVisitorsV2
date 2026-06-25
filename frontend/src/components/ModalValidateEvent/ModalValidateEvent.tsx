@@ -8,14 +8,14 @@ interface ModalValidateEventProps {
     isOpen: boolean;
     onClose: () => void;
     onEventChange?: () => void;
-    eventIds: string[];
+    eventInfo: [string, string][];
 }
 
 const ModalValidateEvent = ({
     isOpen,
     onClose,
     onEventChange,
-    eventIds,
+    eventInfo,
 }: ModalValidateEventProps) => {
     const { getApiUrl, getHeaders } = useApi();
     const { handleClose, handleBackdropClick } = useModalManager({
@@ -57,9 +57,11 @@ const ModalValidateEvent = ({
         >
             <div className="modal-content-validate-event">
                 <h2>Valider les événements</h2>
-                {eventIds.map((eventId, index) => (
+                {eventInfo.map(([eventId, eventTitle], index) => (
                     <div key={index} className="event-item">
-                        <p>Événement ID: {eventId}</p>
+                        <p className="event-id">
+                            Événement : {eventTitle} - ID : {eventId}
+                        </p>
                         <div className="event-buttons">
                             <Button
                                 component_type="accept"

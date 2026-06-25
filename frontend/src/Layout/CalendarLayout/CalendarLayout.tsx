@@ -3,6 +3,7 @@ import Fullcalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
+import momentTimezonePlugin from '@fullcalendar/moment-timezone';
 import frLocale from '@fullcalendar/core/locales/fr';
 import './CalendarLayout.css';
 
@@ -72,10 +73,14 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
         slotMinTime: '08:00:00',
         slotMaxTime: '20:00:00',
         allDaySlot: false,
-        editable: true,
+        editable: false,
         selectable: true,
         weekends: false,
         locale: frLocale,
+        dateClick: (info: any) => {
+            setIsModalOpen(true);
+        },
+        timezone: 'Europe/Paris' as const,
     };
 
     const darkOrLight = (red: number, green: number, blue: number) => {
@@ -97,8 +102,8 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
             description: event.description,
             badge: event.badge,
             user: event.user,
-            start: event.start,
-            end: event.end,
+            start: event.startStr,
+            end: event.endStr,
             accepted: event.accepted,
             backgroundColor: event.accepted ? event.color : '#676767',
             textColor: darkOrLight(
@@ -106,6 +111,7 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
                 parseInt(event.color.slice(3, 5), 16),
                 parseInt(event.color.slice(5, 7), 16)
             ),
+            timezone: 'Europe/Paris',
         }));
 
         setEvents(events);
@@ -148,9 +154,9 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
                     <ModalValidateEvent
                         isOpen={isValidateModalOpen}
                         onClose={() => setIsValidateModalOpen(false)}
-                        eventIds={events
+                        eventInfo={events
                             .filter((event) => !event.accepted)
-                            .map((event) => event.id)}
+                            .map((event) => [event.id, event.title])}
                     />
                 )}
                 <h1>Bienvenue au CreaLab {emailToName(user.email)}</h1>
@@ -164,25 +170,35 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
 
             <div className="calendar-container">
                 <Fullcalendar
-                    plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+                    plugins={[
+                        dayGridPlugin,
+                        timeGridPlugin,
+                        interactionPlugin,
+                        momentTimezonePlugin,
+                    ]}
                     {...calendarConfig}
                     events={events}
                     eventContent={(arg) => (
-                        <div className="fc-event-content">
-                            <div className="fc-event-title">
-                                {arg.event.title}
+                        console.log('Event content arg:', arg),
+                        (
+                            <div className="fc-event-content">
+                                <div className="fc-event-title">
+                                    {arg.event.title}
+                                </div>
+                                <div className="fc-event-badge">
+                                    {arg.event.extendedProps.badge}
+                                </div>
+                                <div className="fc-event-time">
+                                    {arg.timeText}
+                                </div>
+                                <div className="fc-event-description">
+                                    {arg.event.extendedProps.description}
+                                </div>
+                                <div className="fc-event-user">
+                                    {arg.event.extendedProps.user}
+                                </div>
                             </div>
-                            <div className="fc-event-badge">
-                                {arg.event.extendedProps.badge}
-                            </div>
-                            <div className="fc-event-time">{arg.timeText}</div>
-                            <div className="fc-event-description">
-                                {arg.event.extendedProps.description}
-                            </div>
-                            <div className="fc-event-user">
-                                {arg.event.extendedProps.user}
-                            </div>
-                        </div>
+                        )
                     )}
                 />
             </div>
