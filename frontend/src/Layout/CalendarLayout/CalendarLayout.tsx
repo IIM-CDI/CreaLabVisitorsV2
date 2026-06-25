@@ -179,26 +179,23 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
                     {...calendarConfig}
                     events={events}
                     eventContent={(arg) => (
-                        console.log('Event content arg:', arg),
-                        (
-                            <div className="fc-event-content">
-                                <div className="fc-event-title">
-                                    {arg.event.title}
-                                </div>
-                                <div className="fc-event-badge">
-                                    {arg.event.extendedProps.badge}
-                                </div>
-                                <div className="fc-event-time">
-                                    {arg.timeText}
-                                </div>
-                                <div className="fc-event-description">
-                                    {arg.event.extendedProps.description}
-                                </div>
-                                <div className="fc-event-user">
-                                    {arg.event.extendedProps.user}
-                                </div>
+                        <div className="fc-event-content">
+                            <div className="fc-event-title">
+                                {arg.event.title}
                             </div>
-                        )
+                            <div className="fc-event-badge">
+                                {arg.event.extendedProps.badge}
+                            </div>
+                            <div className="fc-event-time">
+                                {arg.timeText}
+                            </div>
+                            <div className="fc-event-description">
+                                {arg.event.extendedProps.description}
+                            </div>
+                            <div className="fc-event-user">
+                                {arg.event.extendedProps.user}
+                            </div>
+                        </div>
                     )}
                 />
             </div>
