@@ -59,7 +59,9 @@ const ModalValidateEvent = ({
                 <h2>Valider les événements</h2>
                 {eventInfo.map(([eventId, eventTitle], index) => (
                     <div key={index} className="event-item">
-                        <p className="event-id">Événement : {eventTitle} - ID : {eventId}</p>
+                        <p className="event-id">
+                            Événement : {eventTitle} - ID : {eventId}
+                        </p>
                         <div className="event-buttons">
                             <Button
                                 component_type="accept"

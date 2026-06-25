@@ -23,7 +23,7 @@
     max-width: 90%;
 }
 
-.event-item{
+.event-item {
     display: flex;
     flex-direction: column;
     gap: 5px;
