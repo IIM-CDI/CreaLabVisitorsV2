@@ -186,9 +186,7 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
                             <div className="fc-event-badge">
                                 {arg.event.extendedProps.badge}
                             </div>
-                            <div className="fc-event-time">
-                                {arg.timeText}
-                            </div>
+                            <div className="fc-event-time">{arg.timeText}</div>
                             <div className="fc-event-description">
                                 {arg.event.extendedProps.description}
                             </div>
