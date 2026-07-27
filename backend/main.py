@@ -1,14 +1,11 @@
 import os
-import smtplib
-import ssl
 from datetime import datetime
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 
 import bcrypt
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from generationICS import creer_invitation_ics
 from mailing import send_new_event_email, send_rejection_email, send_validation_email
 from supabase import create_client
 
@@ -137,7 +134,7 @@ async def create_event(title:str,description:str, user_mail:str, start:str, end:
     next_id = 1 if not id_response.data else int(id_response.data[0]["id"]) + 1
     supabase.table("CreaLab_events").insert({"id": next_id, "title": title, "description": description, "user": user, "user_mail": user_mail, "start": start, "startStr": time_to_str(start_dt), "end": end, "endStr": time_to_str(end_dt), "duration": str(end_dt - start_dt), "color": color, "badge": badge, "accepted": False}).execute()
     send_new_event_email(
-        recipient=os.getenv("ADMIN_EMAIL"),
+        recipient=os.getenv("SMTP_SENDER"),
         data={
             "title": title,
             "description": description,
@@ -178,8 +175,19 @@ async def update_event(event_id: int):
     if not response.data:
         return {"message": "Event not found"}
     supabase.table("CreaLab_events").update({"accepted": True}).eq("id", event_id).execute()
+    ICS = creer_invitation_ics(
+        sujet=response.data[0]["title"],
+        debut=datetime.fromisoformat(response.data[0]["start"]),
+        fin=datetime.fromisoformat(response.data[0]["end"]),
+        organisateur=os.getenv("ADMIN_EMAIL"),
+        participants=[response.data[0]["user_mail"]],
+        description=response.data[0]["description"],
+        lieu="CreaLab",
+    )
+    print(f"ICS file created: {ICS}")
     send_validation_email(
         recipient=response.data[0]["user_mail"],
-        response=response
+        response=response,
+        attachments=[ICS]
     )
     return {"message": "Event updated"}
