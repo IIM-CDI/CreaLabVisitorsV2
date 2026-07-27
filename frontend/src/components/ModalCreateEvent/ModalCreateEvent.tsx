@@ -72,26 +72,30 @@ const ModalCreateEvent = ({
         }
 
         setErrorMessage('');
-
-        const params = new URLSearchParams();
-        params.append('title', eventTitle);
-        params.append('description', eventDescription);
-        params.append('user_mail', userMail);
-        params.append('start', eventDateStart);
-        params.append('end', eventDateEnd);
-        params.append(
-            'color',
-            badgesData.find((badge) => badge.label === selectedBadge)?.color ||
-                ''
-        );
-        params.append('badge', selectedBadge);
-
-        fetch(`${getApiUrl()}/event/?${params.toString()}`, {
+        fetch(`${getApiUrl()}/event/`, {
             method: 'POST',
             headers: getHeaders(),
+            body: JSON.stringify({
+                title: eventTitle,
+                description: eventDescription,
+                user_mail: userMail,
+                start: eventDateStart,
+                end: eventDateEnd,
+                color:
+                    badgesData.find((badge) => badge.label === selectedBadge)
+                        ?.color || '',
+                badge: selectedBadge,
+            }),
         })
-            .then((response) => response.json())
-            .then((data) => {
+            .then(async (response) => {
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(
+                        data.detail ||
+                            data.message ||
+                            "Erreur lors de la création de l'événement."
+                    );
+                }
                 if (onEventChange) {
                     onEventChange();
                 }

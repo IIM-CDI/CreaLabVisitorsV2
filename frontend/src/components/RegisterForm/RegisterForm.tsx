@@ -31,23 +31,19 @@ const RegisterForm = () => {
         }
 
         try {
-            const params = new URLSearchParams();
-            params.append('email', email);
-            params.append('password', password);
-
-            const response = await fetch(
-                `${getApiUrl()}/user/?${params.toString()}`,
-                {
-                    method: 'POST',
-                    headers: getHeaders(),
-                }
-            );
+            const response = await fetch(`${getApiUrl()}/user/`, {
+                method: 'POST',
+                headers: getHeaders(),
+                body: JSON.stringify({ email, password }),
+            });
 
             const data = await response.json();
 
             if (!response.ok) {
                 setErrorMessage(
-                    data.message || "Erreur lors de l'inscription."
+                    data.detail ||
+                        data.message ||
+                        "Erreur lors de l'inscription."
                 );
                 return;
             }
