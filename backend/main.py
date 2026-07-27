@@ -1,10 +1,16 @@
+import os
+import smtplib
+import ssl
+from datetime import datetime
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
+import bcrypt
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from mailing import send_new_event_email, send_rejection_email, send_validation_email
 from supabase import create_client
-from dotenv import load_dotenv
-import bcrypt
-import os
-from datetime import datetime
 
 #INITITLAISATION
 
@@ -130,6 +136,19 @@ async def create_event(title:str,description:str, user_mail:str, start:str, end:
     id_response = supabase.table("CreaLab_events").select("id").order("id", desc=True).limit(1).execute()
     next_id = 1 if not id_response.data else int(id_response.data[0]["id"]) + 1
     supabase.table("CreaLab_events").insert({"id": next_id, "title": title, "description": description, "user": user, "user_mail": user_mail, "start": start, "startStr": time_to_str(start_dt), "end": end, "endStr": time_to_str(end_dt), "duration": str(end_dt - start_dt), "color": color, "badge": badge, "accepted": False}).execute()
+    send_new_event_email(
+        recipient=os.getenv("ADMIN_EMAIL"),
+        data={
+            "title": title,
+            "description": description,
+            "user": user,
+            "user_mail": user_mail,
+            "start": start,
+            "end": end,
+            "color": color,
+            "badge": badge
+        }
+    )
     return {"message": "Event created", "id": next_id}
 
 @app.get("/events/")
@@ -145,6 +164,10 @@ async def delete_event(event_id: int):
     if not response.data:
         return {"message": "Event not found"}
     supabase.table("CreaLab_events").delete().eq("id", event_id).execute()
+    send_rejection_email(
+        recipient=response.data[0]["user_mail"],
+        response=response
+    )
     return {"message": "Event deleted"}
 
 @app.put("/event/validate/{event_id}")
@@ -155,4 +178,8 @@ async def update_event(event_id: int):
     if not response.data:
         return {"message": "Event not found"}
     supabase.table("CreaLab_events").update({"accepted": True}).eq("id", event_id).execute()
+    send_validation_email(
+        recipient=response.data[0]["user_mail"],
+        response=response
+    )
     return {"message": "Event updated"}
