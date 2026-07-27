@@ -8,6 +8,7 @@
     "main": "index.js",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
+        "install": "pip install -r requirements.txt",
         "start": "fastapi dev"
     }
 }
