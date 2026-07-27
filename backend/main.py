@@ -18,12 +18,18 @@ load_dotenv()
 app = FastAPI()
 
 FRONTEND_URL = os.getenv("FRONTEND_URL")
+FRONTEND_URLS = os.getenv("FRONTEND_URLS")
 
-allow_origins = [FRONTEND_URL] if FRONTEND_URL else ["http://localhost:3000"]
+allow_origins = ["http://localhost:3000"]
+if FRONTEND_URLS:
+    allow_origins = [origin.strip() for origin in FRONTEND_URLS.split(",") if origin.strip()]
+elif FRONTEND_URL:
+    allow_origins = [FRONTEND_URL]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allow_origins,
+    allow_origin_regex=r"^https://crealabvisitorsv2(-\d+)?\.onrender\.com$",
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
