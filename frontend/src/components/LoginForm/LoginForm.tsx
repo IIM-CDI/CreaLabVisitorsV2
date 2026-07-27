@@ -34,7 +34,9 @@ const LoginForm = () => {
                 const data = await response.json();
                 if (!response.ok) {
                     throw new Error(
-                        data.detail || data.message || 'Erreur lors de la connexion.'
+                        data.detail ||
+                            data.message ||
+                            'Erreur lors de la connexion.'
                     );
                 }
 

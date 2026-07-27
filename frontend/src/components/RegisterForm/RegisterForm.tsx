@@ -31,20 +31,19 @@ const RegisterForm = () => {
         }
 
         try {
-            const response = await fetch(
-                `${getApiUrl()}/user/`,
-                {
-                    method: 'POST',
-                    headers: getHeaders(),
-                    body: JSON.stringify({ email, password }),
-                }
-            );
+            const response = await fetch(`${getApiUrl()}/user/`, {
+                method: 'POST',
+                headers: getHeaders(),
+                body: JSON.stringify({ email, password }),
+            });
 
             const data = await response.json();
 
             if (!response.ok) {
                 setErrorMessage(
-                    data.detail || data.message || "Erreur lors de l'inscription."
+                    data.detail ||
+                        data.message ||
+                        "Erreur lors de l'inscription."
                 );
                 return;
             }

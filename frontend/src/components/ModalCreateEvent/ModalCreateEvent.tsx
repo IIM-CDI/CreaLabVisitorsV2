@@ -91,7 +91,9 @@ const ModalCreateEvent = ({
                 const data = await response.json();
                 if (!response.ok) {
                     throw new Error(
-                        data.detail || data.message || 'Erreur lors de la création de l\'événement.'
+                        data.detail ||
+                            data.message ||
+                            "Erreur lors de la création de l'événement."
                     );
                 }
                 if (onEventChange) {
