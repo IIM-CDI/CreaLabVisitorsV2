@@ -1,10 +1,15 @@
+import os
+import smtplib
+import ssl
+from datetime import datetime
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
+import bcrypt
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from supabase import create_client
-from dotenv import load_dotenv
-import bcrypt
-import os
-from datetime import datetime
 
 #INITITLAISATION
 
@@ -155,4 +160,75 @@ async def update_event(event_id: int):
     if not response.data:
         return {"message": "Event not found"}
     supabase.table("CreaLab_events").update({"accepted": True}).eq("id", event_id).execute()
+    email_body = f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Événement accepté</title>
+</head>
+<body style="font-family: Arial, Helvetica, sans-serif; color: #333; background-color: #f7f7f7; padding: 20px; margin: 0;">
+    <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
+        <div style="padding: 20px 24px; background: #0b5ed7; color: #ffffff;">
+            <h2 style="margin: 0; font-size: 20px;">Événement accepté</h2>
+        </div>
+        <div style="padding: 20px; line-height: 1.5; color: #333;">
+            <p>Bonjour {response.data[0]['user']},</p>
+            <p>Nous sommes heureux de vous informer que votre événement <strong>"{response.data[0]['title']}"</strong> a été <strong>accepté</strong> par l'équipe du Creativ'Lab.</p>
+            <p style="margin: 12px 0;"><strong>Détails :</strong></p>
+            <ul style="margin: 8px 0; padding-left: 20px;">
+                <li>Titre : {response.data[0]['title']}</li>
+                <li>Organisateur : {response.data[0]['user']}</li>
+                <li>Date / heure : {response.data[0]['start']} → {response.data[0]['end']}</li>
+            </ul>
+            <p>Si vous avez des questions ou souhaitez modifier des informations, répondez simplement à cet e‑mail ou contactez-nous via le panneau d'administration.</p>
+            <p>Cordialement,<br>L'équipe Creativ'Lab</p>
+        </div>
+        <div style="padding: 12px 20px; background: #f1f1f1; color: #666; font-size: 12px; text-align: center;">
+            Merci de respecter les règles du laboratoire et de bien préparer votre matériel avant l'événement.
+        </div>
+    </div>
+</body>
+</html>"""
+    send_email(
+        recipient=response.data[0]["user_mail"],
+        subject="Événement Creativ'Lab accepté",
+        body=email_body
+    )
     return {"message": "Event updated"}
+
+# EMAIL SMTP SYSTEM
+
+def send_email(recipient: str, subject: str, body: str):
+    sender = os.getenv("SMTP_SENDER")
+    password = os.getenv("SMTP_PASSWORD", "").replace(" ", "")
+    smtp_server = os.getenv("SMTP_SERVER")
+    smtp_port = int(os.getenv("SMTP_PORT", 587))
+    smtp_timeout = int(os.getenv("SMTP_TIMEOUT", 10))
+    use_ssl = os.getenv("SMTP_USE_SSL", "").lower() in {"1", "true", "yes"} or smtp_port == 465
+
+    if not sender or not password or not smtp_server:
+        raise ValueError("SMTP_SENDER, SMTP_PASSWORD, and SMTP_SERVER must be set")
+
+    msg = MIMEMultipart()
+    msg["From"] = sender
+    msg["To"] = recipient
+    msg["Subject"] = subject
+    msg.attach(MIMEText(body, "html"))
+
+    try:
+        if use_ssl:
+            with smtplib.SMTP_SSL(smtp_server, smtp_port, timeout=smtp_timeout, context=ssl.create_default_context()) as server:
+                server.login(sender, password)
+                server.sendmail(sender, [recipient], msg.as_string())
+        else:
+            with smtplib.SMTP(smtp_server, smtp_port, timeout=smtp_timeout) as server:
+                server.ehlo()
+                server.starttls(context=ssl.create_default_context())
+                server.ehlo()
+                server.login(sender, password)
+                server.sendmail(sender, [recipient], msg.as_string())
+    except Exception as exc:
+        raise RuntimeError(f"Unable to send email via {smtp_server}:{smtp_port}") from exc
+
+
