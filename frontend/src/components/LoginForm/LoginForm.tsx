@@ -25,17 +25,23 @@ const LoginForm = () => {
             return;
         }
 
-        const params = new URLSearchParams();
-        params.append('email', email);
-        params.append('password', password);
-
-        fetch(`${getApiUrl()}/login/?${params.toString()}`, {
+        fetch(`${getApiUrl()}/login/`, {
             method: 'POST',
             headers: getHeaders(),
+            body: JSON.stringify({ email, password }),
         })
-            .then((response) => response.json())
-            .then(() => {
-                localStorage.setItem('user', JSON.stringify({ email }));
+            .then(async (response) => {
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(
+                        data.detail || data.message || 'Erreur lors de la connexion.'
+                    );
+                }
+
+                localStorage.setItem(
+                    'user',
+                    JSON.stringify(data.user || { email })
+                );
                 localStorage.setItem('mail', email);
                 setEmail('');
                 setPassword('');
