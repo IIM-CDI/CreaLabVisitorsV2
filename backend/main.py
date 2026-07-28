@@ -213,7 +213,6 @@ async def create_event(payload: EventCreateRequest):
             "user_mail": user_mail,
             "start": start,
             "end": end,
-            "color": color,
             "badge": badge,
         },
     )
@@ -235,6 +234,7 @@ async def delete_event(event_id: int):
     notify_admin_or_log(
         "Rejection notification",
         send_rejection_email,
+        admin_email=os.getenv("SMTP_SENDER"),
         recipient=response.data[0]["user_mail"],
         response=response,
     )
@@ -252,7 +252,7 @@ async def update_event(event_id: int):
         sujet=response.data[0]["title"],
         debut=datetime.fromisoformat(response.data[0]["start"]),
         fin=datetime.fromisoformat(response.data[0]["end"]),
-        organisateur=os.getenv("ADMIN_EMAIL"),
+        organisateur=os.getenv("SMTP_SENDER"),
         participants=[response.data[0]["user_mail"]],
         description=response.data[0]["description"],
         lieu="CreaLab",
@@ -261,6 +261,7 @@ async def update_event(event_id: int):
     notify_admin_or_log(
         "Validation notification",
         send_validation_email,
+        admin_email=os.getenv("SMTP_SENDER"),
         recipient=response.data[0]["user_mail"],
         response=response,
         attachments=[ICS],

@@ -11,6 +11,12 @@ from postgrest import APIResponse
 
 # EMAIL SMTP SYSTEM
 
+
+def format_human_datetime(value: str | datetime.datetime) -> str:
+    if isinstance(value, str):
+        value = datetime.datetime.fromisoformat(value)
+    return value.strftime("%d/%m/%Y à %H:%M")
+
 def _send_via_ssl(smtp_server: str, smtp_port: int, smtp_timeout: int, sender: str, password: str, recipient: str, message: str):
     with smtplib.SMTP_SSL(smtp_server, smtp_port, timeout=smtp_timeout, context=ssl.create_default_context()) as server:
         server.login(sender, password)
@@ -87,7 +93,7 @@ def send_email(recipient: str, subject: str, body: str, attachments: list | None
     except (OSError, ssl.SSLError, smtplib.SMTPException) as exc:
         raise RuntimeError(f"Unable to send email via {smtp_server}:{smtp_port}: {exc.__class__.__name__}: {exc}") from exc
 
-def send_validation_email(recipient:str, response: APIResponse, attachments: list | None = None):
+def send_validation_email(admin_email: str, recipient: str, response: APIResponse, attachments: list | None = None):
     subject="Événement Creativ'Lab accepté"
     body=f"""<!DOCTYPE html>
 <html>
@@ -111,7 +117,7 @@ def send_validation_email(recipient:str, response: APIResponse, attachments: lis
             <ul style="margin: 8px 0; padding-left: 20px;">
                 <li>Titre : {response.data[0]['title']}</li>
                 <li>Organisateur : {response.data[0]['user']}</li>
-                <li>Date / heure : {response.data[0]['start']} → {response.data[0]['end']}</li>
+                <li>Date / heure : {format_human_datetime(response.data[0]['start'])} → {format_human_datetime(response.data[0]['end'])}</li>
             </ul>
             <p>Si vous avez des questions ou souhaitez modifier des informations, répondez simplement à cet e‑mail ou contactez-nous via le panneau d'administration.</p>
             <p>Cordialement,<br>L'équipe Creativ'Lab</p>
@@ -123,9 +129,10 @@ def send_validation_email(recipient:str, response: APIResponse, attachments: lis
 </body>
 </html>"""
     send_email(recipient, subject, body, attachments=attachments)
+    send_email(admin_email, f"Nouvel événement accepté: {response.data[0]['title']}", body, attachments=attachments)
     
 
-def send_rejection_email(recipient:str, response: APIResponse):
+def send_rejection_email(admin_email: str, recipient: str, response: APIResponse):
     subject="Événement Creativ'Lab refusé"
     body=f"""<!DOCTYPE html>
 <html>
@@ -146,7 +153,7 @@ def send_rejection_email(recipient:str, response: APIResponse):
             <ul style="margin: 8px 0; padding-left: 20px;">
                 <li>Titre : {response.data[0]['title']}</li>
                 <li>Organisateur : {response.data[0]['user']}</li>
-                <li>Date / heure proposée : {response.data[0]['start']} → {response.data[0]['end']}</li>
+                <li>Date / heure proposée : {format_human_datetime(response.data[0]['start'])} → {format_human_datetime(response.data[0]['end'])}</li>
             </ul>
             <p>Si vous avez des questions concernant cette décision ou souhaitez discuter des raisons du rejet, n'hésitez pas à nous contacter via le panneau d'administration.</p>
             <p>Cordialement,<br>L'équipe Creativ'Lab</p>
@@ -158,8 +165,9 @@ def send_rejection_email(recipient:str, response: APIResponse):
 </body>
 </html>"""
     send_email(recipient, subject, body)
+    send_email(admin_email, f"Nouvel événement rejeté: {response.data[0]['title']}", body)
     
-def send_new_event_email(recipient:str, data: dict):
+def send_new_event_email(recipient: str, data: dict):
     subject="Nouvel événement Creativ'Lab"
     body=f"""<!DOCTYPE html>
 <html>
@@ -182,10 +190,9 @@ def send_new_event_email(recipient:str, data: dict):
                 <li>Description : {data.get('description')}</li>
                         <li>Demandeur : {data.get('user')}</li>
                         <li>Adresse e-mail : {data.get('user_mail')}</li>
-                <li>Date / heure proposée : {data.get('start')} → {data.get('end')}</li>
+                <li>Date / heure proposée : {format_human_datetime(data.get('start'))} → {format_human_datetime(data.get('end'))}</li>
                 <li>Durée : {datetime.datetime.fromisoformat(data.get('end')) - datetime.datetime.fromisoformat(data.get('start'))}</li>
-                        <li>Couleur : {data.get('color')}</li>
-                        <li>Badge : {data.get('badge')}</li>
+                        <li>Type : {data.get('badge')}</li>
             </ul>
                     <p>Merci de vérifier cet événement et de le valider ou le refuser depuis l'interface d'administration.</p>
                     <p>Cordialement,<br>Système Creativ'Lab</p>
