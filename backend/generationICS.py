@@ -13,7 +13,7 @@ def creer_invitation_ics(
     participants: list[str],
     description: str = "",
     lieu: str = "",
-    uid: str = None,
+    uid: str | None = None,
     sequence: int = 0,
     method: str = "REQUEST",
     fichier: str = "invitation.ics",

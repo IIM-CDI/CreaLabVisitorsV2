@@ -1,8 +1,13 @@
 import os
 import re
-from datetime import datetime
 
 import bcrypt
+from datetime_utils import (
+    get_event_datetime,
+    parse_user_datetime,
+    to_database_datetime,
+    to_local_datetime_string,
+)
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -90,10 +95,6 @@ def get_prenom_nom(email: str) -> tuple[str, str]:
             detail="Le mail doit être au format prenom.nom@(edu.)devinci.fr",
         )
     return prenom.capitalize(), nom.capitalize()
-
-def time_to_str(time) -> str:
-    return time.strftime("%Y-%m-%dT%H:%M:%S")
-
 
 def ensure_text(value: str, field_name: str) -> str:
     cleaned_value = value.strip()
@@ -189,8 +190,8 @@ async def create_event(payload: EventCreateRequest):
     if not verify_email(user_mail):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Adresse email invalide")
     try:
-        start_dt = datetime.fromisoformat(start)
-        end_dt = datetime.fromisoformat(end)
+        start_dt = parse_user_datetime(start)
+        end_dt = parse_user_datetime(end)
     except ValueError:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Format de date invalide")
     if end_dt <= start_dt:
@@ -201,7 +202,9 @@ async def create_event(payload: EventCreateRequest):
     user = response.data[0].get("first_name") + " " + response.data[0].get("last_name")
     id_response = supabase.table("CreaLab_events").select("id").order("id", desc=True).limit(1).execute()
     next_id = 1 if not id_response.data else int(id_response.data[0]["id"]) + 1
-    supabase.table("CreaLab_events").insert({"id": next_id, "title": title, "description": description, "user": user, "user_mail": user_mail, "start": start, "startStr": time_to_str(start_dt), "end": end, "endStr": time_to_str(end_dt), "duration": str(end_dt - start_dt), "color": color, "badge": badge, "accepted": False}).execute()
+    start_str = to_local_datetime_string(start_dt)
+    end_str = to_local_datetime_string(end_dt)
+    supabase.table("CreaLab_events").insert({"id": next_id, "title": title, "description": description, "user": user, "user_mail": user_mail, "start": to_database_datetime(start_dt), "startStr": start_str, "end": to_database_datetime(end_dt), "endStr": end_str, "duration": str(end_dt - start_dt), "color": color, "badge": badge, "accepted": False}).execute()
     notify_admin_or_log(
         "New event notification",
         send_new_event_email,
@@ -211,8 +214,8 @@ async def create_event(payload: EventCreateRequest):
             "description": description,
             "user": user,
             "user_mail": user_mail,
-            "start": start,
-            "end": end,
+            "start": start_str,
+            "end": end_str,
             "badge": badge,
         },
     )
@@ -248,20 +251,21 @@ async def update_event(event_id: int):
     if not response.data:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Evénement non trouvé")
     supabase.table("CreaLab_events").update({"accepted": True}).eq("id", event_id).execute()
+    event = response.data[0]
     ICS = creer_invitation_ics(
-        sujet=response.data[0]["title"],
-        debut=datetime.fromisoformat(response.data[0]["start"]),
-        fin=datetime.fromisoformat(response.data[0]["end"]),
+        sujet=event["title"],
+        debut=get_event_datetime(event, "start"),
+        fin=get_event_datetime(event, "end"),
         organisateur=os.getenv("SMTP_SENDER"),
-        participants=[response.data[0]["user_mail"]],
-        description=response.data[0]["description"],
+        participants=[event["user_mail"]],
+        description=event["description"],
         lieu="CreaLab",
     )
     print(f"ICS file created: {ICS}")
     notify_admin_or_log(
         "Validation notification",
         send_validation_email,
-        admin_email=os.getenv("SMTP_SENDER"),
+        admin_email=os.getenv("SMTP_SENDER"), # REMPLACER ICI PAR LE MAIL CODING
         recipient=response.data[0]["user_mail"],
         response=response,
         attachments=[ICS],

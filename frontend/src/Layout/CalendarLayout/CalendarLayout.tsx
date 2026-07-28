@@ -20,6 +20,7 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isValidateModalOpen, setIsValidateModalOpen] = useState(false);
     const [events, setEvents] = useState<any[]>([]);
+    const [clickedTime, setClickedTime] = useState<string | null>(null);
     const { getApiUrl, getHeaders } = useApi();
     const [isAdmin, setIsAdmin] = useState(false);
 
@@ -78,9 +79,10 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
         weekends: false,
         locale: frLocale,
         dateClick: (info: any) => {
+            setClickedTime(info.dateStr);
             setIsModalOpen(true);
         },
-        timezone: 'Europe/Paris' as const,
+        timeZone: 'Europe/Paris' as const,
     };
 
     const darkOrLight = (red: number, green: number, blue: number) => {
@@ -133,7 +135,7 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
     }
 
     useEffect(() => {
-        const interval = setInterval(autoDeconnect, 300_000);
+        const interval = setInterval(autoDeconnect, 600_000);
         return () => clearInterval(interval);
     }, []);
 
@@ -214,6 +216,7 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
                     isOpen={isModalOpen}
                     onClose={() => setIsModalOpen(false)}
                     userMail={user.email}
+                    clickedTime={clickedTime}
                 />
             )}
         </div>

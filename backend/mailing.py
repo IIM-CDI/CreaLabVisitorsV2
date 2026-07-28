@@ -1,4 +1,3 @@
-import datetime
 import os
 import smtplib
 import ssl
@@ -7,21 +6,15 @@ from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
+from datetime_utils import format_human_datetime, get_event_datetime
 from postgrest import APIResponse
 
 # EMAIL SMTP SYSTEM
-
-
-def format_human_datetime(value: str | datetime.datetime) -> str:
-    if isinstance(value, str):
-        value = datetime.datetime.fromisoformat(value)
-    return value.strftime("%d/%m/%Y à %H:%M")
 
 def _send_via_ssl(smtp_server: str, smtp_port: int, smtp_timeout: int, sender: str, password: str, recipient: str, message: str):
     with smtplib.SMTP_SSL(smtp_server, smtp_port, timeout=smtp_timeout, context=ssl.create_default_context()) as server:
         server.login(sender, password)
         server.sendmail(sender, [recipient], message)
-
 
 def _send_via_starttls(smtp_server: str, smtp_port: int, smtp_timeout: int, sender: str, password: str, recipient: str, message: str):
     with smtplib.SMTP(smtp_server, smtp_port, timeout=smtp_timeout) as server:
@@ -30,7 +23,6 @@ def _send_via_starttls(smtp_server: str, smtp_port: int, smtp_timeout: int, send
         server.ehlo()
         server.login(sender, password)
         server.sendmail(sender, [recipient], message)
-
 
 def send_email(recipient: str, subject: str, body: str, attachments: list | None = None):
     sender = os.getenv("SMTP_SENDER")
@@ -117,7 +109,7 @@ def send_validation_email(admin_email: str, recipient: str, response: APIRespons
             <ul style="margin: 8px 0; padding-left: 20px;">
                 <li>Titre : {response.data[0]['title']}</li>
                 <li>Organisateur : {response.data[0]['user']}</li>
-                <li>Date / heure : {format_human_datetime(response.data[0]['start'])} → {format_human_datetime(response.data[0]['end'])}</li>
+                <li>Date / heure : {format_human_datetime(get_event_datetime(response.data[0], 'start'))} → {format_human_datetime(get_event_datetime(response.data[0], 'end'))}</li>
             </ul>
             <p>Si vous avez des questions ou souhaitez modifier des informations, répondez simplement à cet e‑mail ou contactez-nous via le panneau d'administration.</p>
             <p>Cordialement,<br>L'équipe Creativ'Lab</p>
@@ -153,7 +145,7 @@ def send_rejection_email(admin_email: str, recipient: str, response: APIResponse
             <ul style="margin: 8px 0; padding-left: 20px;">
                 <li>Titre : {response.data[0]['title']}</li>
                 <li>Organisateur : {response.data[0]['user']}</li>
-                <li>Date / heure proposée : {format_human_datetime(response.data[0]['start'])} → {format_human_datetime(response.data[0]['end'])}</li>
+                <li>Date / heure proposée : {format_human_datetime(get_event_datetime(response.data[0], 'start'))} → {format_human_datetime(get_event_datetime(response.data[0], 'end'))}</li>
             </ul>
             <p>Si vous avez des questions concernant cette décision ou souhaitez discuter des raisons du rejet, n'hésitez pas à nous contacter via le panneau d'administration.</p>
             <p>Cordialement,<br>L'équipe Creativ'Lab</p>
@@ -191,7 +183,7 @@ def send_new_event_email(recipient: str, data: dict):
                         <li>Demandeur : {data.get('user')}</li>
                         <li>Adresse e-mail : {data.get('user_mail')}</li>
                 <li>Date / heure proposée : {format_human_datetime(data.get('start'))} → {format_human_datetime(data.get('end'))}</li>
-                <li>Durée : {datetime.datetime.fromisoformat(data.get('end')) - datetime.datetime.fromisoformat(data.get('start'))}</li>
+                <li>Durée : {get_event_datetime(data, 'end') - get_event_datetime(data, 'start')}</li>
                         <li>Type : {data.get('badge')}</li>
             </ul>
                     <p>Merci de vérifier cet événement et de le valider ou le refuser depuis l'interface d'administration.</p>

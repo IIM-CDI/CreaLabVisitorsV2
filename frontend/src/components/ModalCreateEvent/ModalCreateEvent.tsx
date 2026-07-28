@@ -12,6 +12,7 @@ interface ModalCreateEventProps {
     onClose: () => void;
     onEventChange?: () => void;
     userMail: string;
+    clickedTime?: string | null;
 }
 
 const ModalCreateEvent = ({
@@ -19,6 +20,7 @@ const ModalCreateEvent = ({
     onClose,
     onEventChange,
     userMail,
+    clickedTime,
 }: ModalCreateEventProps) => {
     const { getApiUrl, getHeaders } = useApi();
     const { handleClose, handleBackdropClick } = useModalManager({
@@ -26,9 +28,11 @@ const ModalCreateEvent = ({
         onClose,
         onEventChange,
     });
+    const clickedTimeValue = clickedTime ? clickedTime.slice(0, 16) : '';
+
     const [errorMessage, setErrorMessage] = useState('');
     const [eventTitle, setEventTitle] = useState('');
-    const [eventDateStart, setEventDateStart] = useState('');
+    const [eventDateStart, setEventDateStart] = useState(clickedTimeValue || '');
     const [eventDateEnd, setEventDateEnd] = useState('');
     const [eventDescription, setEventDescription] = useState('');
     const [selectedBadge, setSelectedBadge] = useState<string>('');
