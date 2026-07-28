@@ -24,12 +24,19 @@ allow_origins = ["http://localhost:3000"]
 if FRONTEND_URLS:
     allow_origins = [origin.strip() for origin in FRONTEND_URLS.split(",") if origin.strip()]
 elif FRONTEND_URL:
-    allow_origins = [FRONTEND_URL]
+    allow_origins = [FRONTEND_URL.strip()]
+
+
+def notify_admin_or_log(action: str, callback, *args, **kwargs):
+    try:
+        callback(*args, **kwargs)
+    except (FileNotFoundError, OSError, RuntimeError, ValueError) as exc:
+        print(f"{action} failed: {exc}")
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allow_origins,
-    allow_origin_regex=r"^https://crealabvisitorsv2(-\d+)?\.onrender\.com$",
+    allow_origin_regex=r"^https://crealabvisitorsv2(?:-\d+)?\.onrender\.com$",
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -195,7 +202,9 @@ async def create_event(payload: EventCreateRequest):
     id_response = supabase.table("CreaLab_events").select("id").order("id", desc=True).limit(1).execute()
     next_id = 1 if not id_response.data else int(id_response.data[0]["id"]) + 1
     supabase.table("CreaLab_events").insert({"id": next_id, "title": title, "description": description, "user": user, "user_mail": user_mail, "start": start, "startStr": time_to_str(start_dt), "end": end, "endStr": time_to_str(end_dt), "duration": str(end_dt - start_dt), "color": color, "badge": badge, "accepted": False}).execute()
-    send_new_event_email(
+    notify_admin_or_log(
+        "New event notification",
+        send_new_event_email,
         recipient=os.getenv("SMTP_SENDER"),
         data={
             "title": title,
@@ -205,8 +214,8 @@ async def create_event(payload: EventCreateRequest):
             "start": start,
             "end": end,
             "color": color,
-            "badge": badge
-        }
+            "badge": badge,
+        },
     )
     return {"message": "Event created", "id": next_id}
 
@@ -247,9 +256,11 @@ async def update_event(event_id: int):
         lieu="CreaLab",
     )
     print(f"ICS file created: {ICS}")
-    send_validation_email(
+    notify_admin_or_log(
+        "Validation notification",
+        send_validation_email,
         recipient=response.data[0]["user_mail"],
         response=response,
-        attachments=[ICS]
+        attachments=[ICS],
     )
     return {"message": "Event updated"}
