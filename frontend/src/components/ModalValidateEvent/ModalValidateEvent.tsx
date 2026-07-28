@@ -35,7 +35,9 @@ const ModalValidateEvent = ({
             );
 
             if (!response.ok) {
-                throw new Error(`Request failed with status ${response.status}`);
+                throw new Error(
+                    `Request failed with status ${response.status}`
+                );
             }
 
             if (onEventChange) {
@@ -57,7 +59,9 @@ const ModalValidateEvent = ({
             );
 
             if (!response.ok) {
-                throw new Error(`Request failed with status ${response.status}`);
+                throw new Error(
+                    `Request failed with status ${response.status}`
+                );
             }
 
             if (onEventChange) {
