@@ -232,9 +232,11 @@ async def delete_event(event_id: int):
     if not response.data:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
     supabase.table("CreaLab_events").delete().eq("id", event_id).execute()
-    send_rejection_email(
+    notify_admin_or_log(
+        "Rejection notification",
+        send_rejection_email,
         recipient=response.data[0]["user_mail"],
-        response=response
+        response=response,
     )
     return {"message": "Event deleted"}
 

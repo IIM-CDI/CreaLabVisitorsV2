@@ -24,30 +24,48 @@ const ModalValidateEvent = ({
         onEventChange,
     });
 
-    const handleAcceptEvent = (eventId: string) => {
-        fetch(`${getApiUrl()}/event/validate/${eventId}`, {
-            method: 'PUT',
-            headers: getHeaders(),
-        })
-            .then((response) => response.json())
-            .catch((error) => {
-                console.error('Error:', error);
-            });
+    const handleAcceptEvent = async (eventId: string) => {
+        try {
+            const response = await fetch(
+                `${getApiUrl()}/event/validate/${eventId}`,
+                {
+                    method: 'PUT',
+                    headers: getHeaders(),
+                }
+            );
 
-        window.location.reload();
+            if (!response.ok) {
+                throw new Error(`Request failed with status ${response.status}`);
+            }
+
+            if (onEventChange) {
+                onEventChange();
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
     };
 
-    const handleRejectEvent = (eventId: string) => {
-        fetch(`${getApiUrl()}/event/reject/${eventId}`, {
-            method: 'DELETE',
-            headers: getHeaders(),
-        })
-            .then((response) => response.json())
-            .catch((error) => {
-                console.error('Error:', error);
-            });
+    const handleRejectEvent = async (eventId: string) => {
+        try {
+            const response = await fetch(
+                `${getApiUrl()}/event/reject/${eventId}`,
+                {
+                    method: 'DELETE',
+                    headers: getHeaders(),
+                }
+            );
 
-        window.location.reload();
+            if (!response.ok) {
+                throw new Error(`Request failed with status ${response.status}`);
+            }
+
+            if (onEventChange) {
+                onEventChange();
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
     };
 
     return (
