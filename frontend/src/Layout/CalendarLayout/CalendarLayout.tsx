@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Fullcalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -23,7 +23,7 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
     const { getApiUrl, getHeaders } = useApi();
     const [isAdmin, setIsAdmin] = useState(false);
 
-    async function checkAdminStatus() {
+    const checkAdminStatus = useCallback(async () => {
         const response = await fetch(`${getApiUrl()}/user/${user.email}`, {
             method: 'GET',
             headers: getHeaders(),
@@ -31,11 +31,11 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
         const data = await response.json();
         console.log('Admin status:', data);
         setIsAdmin(data.user.admin);
-    }
+    }, [getApiUrl, getHeaders, user.email]);
 
     useEffect(() => {
         checkAdminStatus();
-    }, [user.email]);
+    }, [checkAdminStatus]);
 
     const emailToName = (email: string) => {
         const namePart = email.split('@')[0];
@@ -89,7 +89,7 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
         return brightness >= 0.5 ? '#000000' : '#ffffff';
     };
 
-    async function fetchEvents() {
+    const fetchEvents = useCallback(async () => {
         const response = await fetch(`${getApiUrl()}/events/`, {
             method: 'GET',
             headers: getHeaders(),
@@ -116,11 +116,11 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
 
         setEvents(events);
         return events;
-    }
+    }, [getApiUrl, getHeaders]);
 
     useEffect(() => {
         fetchEvents();
-    }, [isModalOpen]);
+    }, [fetchEvents, isModalOpen]);
 
     const handleDeconnect = () => {
         localStorage.setItem('user', JSON.stringify(null));
