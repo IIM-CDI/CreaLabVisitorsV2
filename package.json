@@ -18,7 +18,7 @@
         "test": "echo \"Error: no test specified\" && exit 1",
         "start": "node index.js",
         "prettier": "prettier --write .",
-        "start-all": "concurrently \"cd backend && npm start\" \"cd frontend && npm start\"",
+        "start-all": "concurrently \"cd backend && fastapi dev\" \"cd frontend && npm start\"",
         "prepare": "husky"
     },
     "devDependencies": {
