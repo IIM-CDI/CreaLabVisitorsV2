@@ -87,7 +87,7 @@ def get_prenom_nom(email: str) -> tuple[str, str]:
     if not prenom or not nom:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email must follow prenom.nom@(edu.)devinci.fr format",
+            detail="Le mail doit être au format prenom.nom@(edu.)devinci.fr",
         )
     return prenom.capitalize(), nom.capitalize()
 
@@ -100,7 +100,7 @@ def ensure_text(value: str, field_name: str) -> str:
     if not cleaned_value:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"{field_name} is required",
+            detail=f"{field_name} est requis",
         )
     return cleaned_value
 
@@ -117,7 +117,7 @@ async def get_user(email: str):
     normalized_email = normalize_email(email)
     response = supabase.table("CreaLab_visitors").select("*").eq("email", normalized_email).execute()
     if not response.data:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Utilisateur non trouvé")
     user = dict(response.data[0])
     user.pop("password", None)
     return {"user": user}
@@ -127,9 +127,9 @@ async def create_user(payload: UserCredentials):
     email = normalize_email(ensure_text(payload.email, "Email"))
     password = ensure_text(payload.password, "Password")
     if not verify_email(email):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid email address")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Adresse email invalide")
     if supabase.table("CreaLab_visitors").select("*").eq("email", email).execute().data:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="User already exists")
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="L'utilisateur existe déjà")
     prenom, nom = get_prenom_nom(email)
     hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
     role = get_role(email)
@@ -141,10 +141,10 @@ async def login(payload: UserCredentials):
     email = normalize_email(ensure_text(payload.email, "Email"))
     password = ensure_text(payload.password, "Password")
     if not verify_email(email):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid email address")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Adresse email invalide")
     response = supabase.table("CreaLab_visitors").select("*").eq("email", email).execute()
     if not response.data:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Utilisateur non trouvé")
     user = response.data[0]
     try:
         if bcrypt.checkpw(password.encode('utf-8'), user["password"].encode('utf-8')):
@@ -153,7 +153,7 @@ async def login(payload: UserCredentials):
             return {"message": "Login successful", "user": safe_user}
     except (KeyError, ValueError):
         pass
-    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect email or password")
+    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Adresse email ou mot de passe incorrect")
 
 @app.put("/user/")
 async def update_user(payload: PasswordUpdateRequest):
@@ -161,7 +161,7 @@ async def update_user(payload: PasswordUpdateRequest):
     new_password = ensure_text(payload.new_password, "New password")
     response = supabase.table("CreaLab_visitors").select("*").eq("email", email).execute()
     if not response.data:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Utilisateur non trouvé")
     hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
     supabase.table("CreaLab_visitors").update({"password": hashed_password}).eq("email", email).execute()
     return {"message": "Password updated"}
@@ -171,7 +171,7 @@ async def delete_user(email: str):
     normalized_email = normalize_email(ensure_text(email, "Email"))
     response = supabase.table("CreaLab_visitors").select("*").eq("email", normalized_email).execute()
     if not response.data:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Utilisateur non trouvé")
     supabase.table("CreaLab_visitors").delete().eq("email", normalized_email).execute()
     return {"message": "User deleted"}
 
@@ -187,17 +187,17 @@ async def create_event(payload: EventCreateRequest):
     color = ensure_text(payload.color, "Color")
     badge = ensure_text(payload.badge, "Badge")
     if not verify_email(user_mail):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid email address")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Adresse email invalide")
     try:
         start_dt = datetime.fromisoformat(start)
         end_dt = datetime.fromisoformat(end)
     except ValueError:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid date format")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Format de date invalide")
     if end_dt <= start_dt:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="End time must be after start time")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="L'heure de fin doit être après l'heure de début")
     response = supabase.table("CreaLab_visitors").select("first_name", "last_name").eq("email", user_mail).execute()
     if not response.data:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Utilisateur non trouvé")
     user = response.data[0].get("first_name") + " " + response.data[0].get("last_name")
     id_response = supabase.table("CreaLab_events").select("id").order("id", desc=True).limit(1).execute()
     next_id = 1 if not id_response.data else int(id_response.data[0]["id"]) + 1
@@ -226,10 +226,10 @@ async def get_events():
 @app.delete("/event/reject/{event_id}")
 async def delete_event(event_id: int):
     if not event_id:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Event ID is required")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="l'ID de l'événement est requis")
     response = supabase.table("CreaLab_events").select("*").eq("id", event_id).execute()
     if not response.data:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Evénement non trouvé")
     supabase.table("CreaLab_events").delete().eq("id", event_id).execute()
     notify_admin_or_log(
         "Rejection notification",
@@ -243,10 +243,10 @@ async def delete_event(event_id: int):
 @app.put("/event/validate/{event_id}")
 async def update_event(event_id: int):
     if not event_id:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Event ID is required")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="l'ID de l'événement est requis")
     response = supabase.table("CreaLab_events").select("*").eq("id", event_id).execute()
     if not response.data:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Evénement non trouvé")
     supabase.table("CreaLab_events").update({"accepted": True}).eq("id", event_id).execute()
     ICS = creer_invitation_ics(
         sujet=response.data[0]["title"],
