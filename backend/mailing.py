@@ -11,6 +11,21 @@ from postgrest import APIResponse
 
 # EMAIL SMTP SYSTEM
 
+def _send_via_ssl(smtp_server: str, smtp_port: int, smtp_timeout: int, sender: str, password: str, recipient: str, message: str):
+    with smtplib.SMTP_SSL(smtp_server, smtp_port, timeout=smtp_timeout, context=ssl.create_default_context()) as server:
+        server.login(sender, password)
+        server.sendmail(sender, [recipient], message)
+
+
+def _send_via_starttls(smtp_server: str, smtp_port: int, smtp_timeout: int, sender: str, password: str, recipient: str, message: str):
+    with smtplib.SMTP(smtp_server, smtp_port, timeout=smtp_timeout) as server:
+        server.ehlo()
+        server.starttls(context=ssl.create_default_context())
+        server.ehlo()
+        server.login(sender, password)
+        server.sendmail(sender, [recipient], message)
+
+
 def send_email(recipient: str, subject: str, body: str, attachments: list | None = None):
     sender = os.getenv("SMTP_SENDER")
     password = os.getenv("SMTP_PASSWORD", "").replace(" ", "")
@@ -40,20 +55,37 @@ def send_email(recipient: str, subject: str, body: str, attachments: list | None
             except FileNotFoundError:
                 raise ValueError(f"Attachment file not found: {attachment_path}")
 
+    attempts = []
+
     try:
         if use_ssl:
-            with smtplib.SMTP_SSL(smtp_server, smtp_port, timeout=smtp_timeout, context=ssl.create_default_context()) as server:
-                server.login(sender, password)
-                server.sendmail(sender, [recipient], msg.as_string())
+            attempts.append(("SSL", smtp_port, _send_via_ssl))
+            if smtp_port == 465:
+                attempts.append(("STARTTLS", 587, _send_via_starttls))
         else:
-            with smtplib.SMTP(smtp_server, smtp_port, timeout=smtp_timeout) as server:
-                server.ehlo()
-                server.starttls(context=ssl.create_default_context())
-                server.ehlo()
-                server.login(sender, password)
-                server.sendmail(sender, [recipient], msg.as_string())
-    except Exception as exc:
-        raise RuntimeError(f"Unable to send email via {smtp_server}:{smtp_port}") from exc
+            attempts.append(("STARTTLS", smtp_port, _send_via_starttls))
+            if smtp_port == 587:
+                attempts.append(("SSL", 465, _send_via_ssl))
+
+        errors = []
+        for mode_name, attempt_port, sender_fn in attempts:
+            try:
+                sender_fn(
+                    smtp_server=smtp_server,
+                    smtp_port=attempt_port,
+                    smtp_timeout=smtp_timeout,
+                    sender=sender,
+                    password=password,
+                    recipient=recipient,
+                    message=msg.as_string(),
+                )
+                return
+            except (OSError, ssl.SSLError, smtplib.SMTPException) as exc:
+                errors.append(f"{mode_name} on {smtp_server}:{attempt_port} -> {exc.__class__.__name__}: {exc}")
+
+        raise RuntimeError("; ".join(errors) if errors else f"Unable to send email via {smtp_server}:{smtp_port}")
+    except (OSError, ssl.SSLError, smtplib.SMTPException) as exc:
+        raise RuntimeError(f"Unable to send email via {smtp_server}:{smtp_port}: {exc.__class__.__name__}: {exc}") from exc
 
 def send_validation_email(recipient:str, response: APIResponse, attachments: list | None = None):
     subject="Événement Creativ'Lab accepté"

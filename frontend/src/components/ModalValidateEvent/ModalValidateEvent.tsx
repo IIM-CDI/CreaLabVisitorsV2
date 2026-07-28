@@ -42,6 +42,7 @@ const ModalValidateEvent = ({
 
             if (onEventChange) {
                 onEventChange();
+                window.location.reload()
             }
         } catch (error) {
             console.error('Error:', error);
@@ -66,6 +67,7 @@ const ModalValidateEvent = ({
 
             if (onEventChange) {
                 onEventChange();
+                window.location.reload()
             }
         } catch (error) {
             console.error('Error:', error);
