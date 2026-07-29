@@ -219,9 +219,7 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
             <div className="calendar-container">
                 <Fullcalendar
                     key={
-                        isCompactCalendar
-                            ? 'compact-calendar'
-                            : 'wide-calendar'
+                        isCompactCalendar ? 'compact-calendar' : 'wide-calendar'
                     }
                     plugins={[
                         dayGridPlugin,

@@ -43,12 +43,8 @@ const ModalCreateEvent = ({
 
     const [errorMessage, setErrorMessage] = useState('');
     const [eventTitle, setEventTitle] = useState('');
-    const [eventStartDate, setEventStartDate] = useState(
-        clickedTimeParts.date
-    );
-    const [eventStartTime, setEventStartTime] = useState(
-        clickedTimeParts.time
-    );
+    const [eventStartDate, setEventStartDate] = useState(clickedTimeParts.date);
+    const [eventStartTime, setEventStartTime] = useState(clickedTimeParts.time);
     const [eventEndDate, setEventEndDate] = useState('');
     const [eventEndTime, setEventEndTime] = useState('');
     const [eventDescription, setEventDescription] = useState('');

@@ -328,8 +328,8 @@
     .navbar {
         grid-template-columns: minmax(0, 1fr) auto;
         grid-template-areas:
-            "title logout"
-            "actions actions";
+            'title logout'
+            'actions actions';
     }
 
     .open-modal-create-event-button-container {
@@ -361,8 +361,8 @@
     .navbar {
         grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
         grid-template-areas:
-            "actions logout"
-            "title title";
+            'actions logout'
+            'title title';
         gap: 8px;
     }
 
