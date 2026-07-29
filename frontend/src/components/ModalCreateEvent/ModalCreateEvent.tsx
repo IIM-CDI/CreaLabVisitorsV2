@@ -62,7 +62,7 @@ const ModalCreateEvent = ({
         { label: 'Impression école', color: '#f9e2b3' },
         { label: 'Electronique', color: '#b7d5f5' },
         { label: 'Peinture', color: '#acecde' },
-        { label: 'Autre', color: '#aaaaaa' },
+        { label: 'Autre', color: '#e7d3fa' },
     ];
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {

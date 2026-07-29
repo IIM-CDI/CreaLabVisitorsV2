@@ -169,21 +169,14 @@
 .fc-event-content {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 5px;
     min-width: 0;
 }
 
-.fc-event-time {
-    font-weight: 600;
-    font-size: 0.875rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
 .fc-event-title {
-    font-weight: 600;
-    font-size: 1.25rem;
+    font-weight: 700;
+    font-size: 1rem;
+    line-height: 1.2;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -200,17 +193,6 @@
     border-radius: 4px;
     background-color: #eff0f3;
     border: #1a1a1a 2px solid;
-}
-
-.fc-event-description {
-    font-size: 0.875rem;
-    font-style: italic;
-}
-
-.fc-event-user {
-    font-size: 0.875rem;
-    font-style: italic;
-    color: #555;
 }
 
 .fc-timegrid-event .fc-event-main {

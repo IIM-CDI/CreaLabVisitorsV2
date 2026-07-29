@@ -9,6 +9,9 @@ import './CalendarLayout.css';
 
 import ModalValidateEvent from '../../components/ModalValidateEvent/ModalValidateEvent';
 import ModalCreateEvent from '../../components/ModalCreateEvent/ModalCreateEvent';
+import ModalEventDetails, {
+    EventDetails,
+} from '../../components/ModalEventDetails/ModalEventDetails';
 import Button from '../../components/Button/Button';
 import { useApi } from '../../hooks/useAPI';
 
@@ -19,6 +22,9 @@ interface CalendarLayoutProps {
 const CalendarLayout = ({ user }: CalendarLayoutProps) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isValidateModalOpen, setIsValidateModalOpen] = useState(false);
+    const [selectedEvent, setSelectedEvent] = useState<EventDetails | null>(
+        null
+    );
     const [events, setEvents] = useState<any[]>([]);
     const [clickedTime, setClickedTime] = useState<string | null>(null);
     const { getApiUrl, getHeaders } = useApi();
@@ -78,9 +84,26 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
         selectable: true,
         weekends: false,
         locale: frLocale,
+        eventDisplay: 'block' as const,
         dateClick: (info: any) => {
             setClickedTime(info.dateStr);
             setIsModalOpen(true);
+        },
+        eventClick: (info: any) => {
+            const { event } = info;
+
+            setSelectedEvent({
+                id: event.id,
+                title: event.title,
+                badge: event.extendedProps.badge,
+                description: event.extendedProps.description,
+                user: event.extendedProps.user,
+                start: event.start,
+                end: event.end,
+                backgroundColor: event.backgroundColor || '#c4c4c4',
+                textColor: event.textColor || '#ffffff',
+                accepted: event.extendedProps.accepted,
+            });
         },
         timeZone: 'Europe/Paris' as const,
     };
@@ -107,7 +130,8 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
             start: event.startStr,
             end: event.endStr,
             accepted: event.accepted,
-            backgroundColor: event.accepted ? event.color : '#676767',
+            backgroundColor: event.accepted ? event.color : '#c4c4c4',
+            borderColor: event.accepted ? event.color : '#c4c4c4',
             textColor: darkOrLight(
                 parseInt(event.color.slice(1, 3), 16),
                 parseInt(event.color.slice(3, 5), 16),
@@ -188,13 +212,6 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
                             <div className="fc-event-badge">
                                 {arg.event.extendedProps.badge}
                             </div>
-                            <div className="fc-event-time">{arg.timeText}</div>
-                            <div className="fc-event-description">
-                                {arg.event.extendedProps.description}
-                            </div>
-                            <div className="fc-event-user">
-                                {arg.event.extendedProps.user}
-                            </div>
                         </div>
                     )}
                 />
@@ -217,6 +234,13 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
                     onClose={() => setIsModalOpen(false)}
                     userMail={user.email}
                     clickedTime={clickedTime}
+                />
+            )}
+            {selectedEvent && (
+                <ModalEventDetails
+                    isOpen={selectedEvent !== null}
+                    onClose={() => setSelectedEvent(null)}
+                    event={selectedEvent}
                 />
             )}
         </div>
