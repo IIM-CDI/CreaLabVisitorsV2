@@ -1,14 +1,13 @@
 .modal-backdrop-create-event {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    inset: 0;
     background-color: rgba(0, 0, 0, 0.5);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 1000;
+    padding: 16px;
+    overflow-y: auto;
 }
 
 .modal-content-create-event {
@@ -16,8 +15,14 @@
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    width: 450px;
-    max-width: 90%;
+    width: min(450px, 100%);
+    max-height: calc(100vh - 32px);
+    max-height: calc(100svh - 32px);
+    overflow-y: auto;
+}
+
+.modal-content-create-event h2 {
+    font-size: clamp(1.25rem, 5vw, 1.55rem);
 }
 
 .modal-form {
@@ -54,8 +59,9 @@
 
 .modal-badge-container {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(125px, 1fr));
     gap: 10px;
+    width: 100%;
 }
 
 .modal-badge-input {
@@ -79,7 +85,25 @@
 }
 
 @media (max-width: 480px) {
+    .modal-backdrop-create-event {
+        align-items: flex-start;
+        padding: 12px;
+    }
+
+    .modal-content-create-event {
+        padding: 16px;
+    }
+
     .modal-datetime-group {
+        grid-template-columns: 1fr;
+    }
+
+    .modal-buttons {
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .modal-badge-container {
         grid-template-columns: 1fr;
     }
 }

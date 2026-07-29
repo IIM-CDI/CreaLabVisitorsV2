@@ -7,12 +7,14 @@
     justify-content: center;
     z-index: 1000;
     padding: 16px;
+    overflow-y: auto;
 }
 
 .modal-content-event-details {
-    width: 460px;
+    width: min(460px, 100%);
     max-width: 100%;
     max-height: calc(100vh - 32px);
+    max-height: calc(100svh - 32px);
     overflow: auto;
     background-color: #ffffff;
     border-radius: 8px;
@@ -138,6 +140,11 @@
 }
 
 @media (max-width: 480px) {
+    .modal-backdrop-event-details {
+        align-items: flex-start;
+        padding: 12px;
+    }
+
     .event-details-header,
     .event-details-body {
         padding-left: 18px;

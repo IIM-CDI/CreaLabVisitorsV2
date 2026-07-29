@@ -2,12 +2,19 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    min-height: 44px;
     padding: 0.5rem 1rem;
     border-radius: 0.25rem;
+    text-align: center;
+    overflow-wrap: anywhere;
 
     &:hover {
         cursor: pointer;
     }
+}
+
+.badge p {
+    margin: 0;
 }
 
 .form {

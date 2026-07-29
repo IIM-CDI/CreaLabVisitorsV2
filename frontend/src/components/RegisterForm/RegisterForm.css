@@ -8,6 +8,10 @@
     width: 100%;
 }
 
+.register-form h2 {
+    font-size: clamp(1.35rem, 5vw, 1.55rem);
+}
+
 .register-form-fields {
     display: flex;
     flex-direction: column;
@@ -15,11 +19,14 @@
     justify-content: center;
 
     gap: 5px;
-    width: 80%;
+    width: 100%;
+    max-width: 340px;
 }
 
 .error-message {
     color: red;
     padding-inline: 5px;
-    width: 80%;
+    width: 100%;
+    max-width: 340px;
+    overflow-wrap: anywhere;
 }

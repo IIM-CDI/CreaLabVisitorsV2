@@ -7,9 +7,21 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     onClick?: () => void;
 }
 
-const Button = ({ component_type = 'primary', text, onClick }: ButtonProps) => {
+const Button = ({
+    component_type = 'primary',
+    text,
+    onClick,
+    type = 'button',
+    className = '',
+    ...buttonProps
+}: ButtonProps) => {
     return (
-        <button className={`button button-${component_type}`} onClick={onClick}>
+        <button
+            {...buttonProps}
+            className={`button button-${component_type} ${className}`.trim()}
+            type={type}
+            onClick={onClick}
+        >
             <p className="button-text">{text}</p>
         </button>
     );

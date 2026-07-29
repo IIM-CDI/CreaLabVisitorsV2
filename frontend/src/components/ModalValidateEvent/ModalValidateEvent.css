@@ -1,14 +1,13 @@
 .modal-backdrop-validate-event {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    inset: 0;
     background-color: rgba(0, 0, 0, 0.5);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 1000;
+    padding: 16px;
+    overflow-y: auto;
 }
 
 .modal-content-validate-event {
@@ -19,8 +18,14 @@
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    width: 400px;
-    max-width: 90%;
+    width: min(440px, 100%);
+    max-height: calc(100vh - 32px);
+    max-height: calc(100svh - 32px);
+    overflow-y: auto;
+}
+
+.modal-content-validate-event h2 {
+    font-size: clamp(1.25rem, 5vw, 1.55rem);
 }
 
 .event-item {
@@ -34,11 +39,30 @@
 
 .event-id {
     font-weight: bold;
-    font-size: 1.2rem;
+    font-size: clamp(0.95rem, 3.5vw, 1.2rem);
+    overflow-wrap: anywhere;
 }
 
 .event-buttons {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
+    gap: 8px;
+}
+
+@media (max-width: 480px) {
+    .modal-backdrop-validate-event {
+        align-items: flex-start;
+        padding: 12px;
+    }
+
+    .modal-content-validate-event {
+        gap: 14px;
+        padding: 16px;
+    }
+
+    .event-buttons {
+        flex-direction: column;
+        gap: 6px;
+    }
 }

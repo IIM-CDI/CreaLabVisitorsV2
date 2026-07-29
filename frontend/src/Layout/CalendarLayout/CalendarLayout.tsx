@@ -29,6 +29,7 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
     const [clickedTime, setClickedTime] = useState<string | null>(null);
     const { getApiUrl, getHeaders } = useApi();
     const [isAdmin, setIsAdmin] = useState(false);
+    const [isCompactCalendar, setIsCompactCalendar] = useState(false);
 
     const checkAdminStatus = useCallback(async () => {
         const response = await fetch(`${getApiUrl()}/user/${user.email}`, {
@@ -44,6 +45,20 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
         checkAdminStatus();
     }, [checkAdminStatus]);
 
+    useEffect(() => {
+        const mediaQuery = window.matchMedia('(max-width: 700px)');
+        const updateCalendarDensity = () => {
+            setIsCompactCalendar(mediaQuery.matches);
+        };
+
+        updateCalendarDensity();
+        mediaQuery.addEventListener('change', updateCalendarDensity);
+
+        return () => {
+            mediaQuery.removeEventListener('change', updateCalendarDensity);
+        };
+    }, []);
+
     const emailToName = (email: string) => {
         const namePart = email.split('@')[0];
         const nameWithSpaces = namePart.replace('.', ' ');
@@ -54,18 +69,24 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
     };
 
     const calendarConfig = {
-        headerToolbar: {
-            left: 'prev,next today',
-            center: 'title',
-            right: 'timeGridDay,timeGridWeek,dayGridMonth',
-        },
+        headerToolbar: isCompactCalendar
+            ? {
+                  left: 'prev,next',
+                  center: 'title',
+                  right: 'today timeGridDay,dayGridMonth',
+              }
+            : {
+                  left: 'prev,next today',
+                  center: 'title',
+                  right: 'timeGridDay,timeGridWeek,dayGridMonth',
+              },
         buttonText: {
-            today: "Aujourd'hui",
+            today: isCompactCalendar ? 'Auj.' : "Aujourd'hui",
             month: 'Mois',
             week: 'Semaine',
             day: 'Jour',
         },
-        initialView: 'timeGridWeek',
+        initialView: isCompactCalendar ? 'timeGridDay' : 'timeGridWeek',
         firstDay: 1,
         slotLabelFormat: {
             hour: '2-digit' as const,
@@ -85,6 +106,7 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
         weekends: false,
         locale: frLocale,
         eventDisplay: 'block' as const,
+        dayMaxEvents: isCompactCalendar ? 2 : true,
         dateClick: (info: any) => {
             setClickedTime(info.dateStr);
             setIsModalOpen(true);
@@ -196,6 +218,11 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
 
             <div className="calendar-container">
                 <Fullcalendar
+                    key={
+                        isCompactCalendar
+                            ? 'compact-calendar'
+                            : 'wide-calendar'
+                    }
                     plugins={[
                         dayGridPlugin,
                         timeGridPlugin,
