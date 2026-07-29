@@ -4,7 +4,7 @@ import './Input.css';
 interface InputProps {
     label: string;
     value: string;
-    type?: 'text' | 'password' | 'email' | 'datetime-local' | 'color';
+    type?: 'text' | 'password' | 'email' | 'datetime-local' | 'color' | 'date' | 'time';
     required?: boolean;
     placeholder?: string;
     className?: string;

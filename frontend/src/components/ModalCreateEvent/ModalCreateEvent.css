@@ -34,7 +34,13 @@
 
 .modal-datetime-inputs {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.modal-datetime-group {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 10px;
 }
 
@@ -70,4 +76,10 @@
     font-size: 1rem;
     color: red;
     font-style: italic;
+}
+
+@media (max-width: 480px) {
+    .modal-datetime-group {
+        grid-template-columns: 1fr;
+    }
 }

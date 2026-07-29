@@ -7,6 +7,16 @@ import Button from '../Button/Button';
 import Badge from '../Badge/Badge';
 import { useApi } from '../../hooks/useAPI';
 
+const splitDateTimeValue = (dateTimeValue: string) => {
+    const [date = '', time = ''] = dateTimeValue.split('T');
+    return { date, time };
+};
+
+const buildDateTimeValue = (date: string, time: string) => {
+    if (!date || !time) return '';
+    return `${date}T${time}`;
+};
+
 interface ModalCreateEventProps {
     isOpen: boolean;
     onClose: () => void;
@@ -29,13 +39,23 @@ const ModalCreateEvent = ({
         onEventChange,
     });
     const clickedTimeValue = clickedTime ? clickedTime.slice(0, 16) : '';
+    const clickedTimeParts = splitDateTimeValue(clickedTimeValue);
 
     const [errorMessage, setErrorMessage] = useState('');
     const [eventTitle, setEventTitle] = useState('');
-    const [eventDateStart, setEventDateStart] = useState(clickedTimeValue || '');
-    const [eventDateEnd, setEventDateEnd] = useState('');
+    const [eventStartDate, setEventStartDate] = useState(
+        clickedTimeParts.date
+    );
+    const [eventStartTime, setEventStartTime] = useState(
+        clickedTimeParts.time
+    );
+    const [eventEndDate, setEventEndDate] = useState('');
+    const [eventEndTime, setEventEndTime] = useState('');
     const [eventDescription, setEventDescription] = useState('');
     const [selectedBadge, setSelectedBadge] = useState<string>('');
+
+    const eventDateStart = buildDateTimeValue(eventStartDate, eventStartTime);
+    const eventDateEnd = buildDateTimeValue(eventEndDate, eventEndTime);
 
     const badgesData = [
         { label: 'Impression perso', color: '#fbd2c9' },
@@ -133,22 +153,46 @@ const ModalCreateEvent = ({
                         onChange={(value: string) => setEventDescription(value)}
                     />
                     <div className="modal-datetime-inputs">
-                        <Input
-                            required
-                            label="Date de début"
-                            type="datetime-local"
-                            value={eventDateStart}
-                            onChange={(value: string) =>
-                                setEventDateStart(value)
-                            }
-                        />
-                        <Input
-                            required
-                            label="Date de fin"
-                            type="datetime-local"
-                            value={eventDateEnd}
-                            onChange={(value: string) => setEventDateEnd(value)}
-                        />
+                        <div className="modal-datetime-group">
+                            <Input
+                                required
+                                label="Date de début"
+                                type="date"
+                                value={eventStartDate}
+                                onChange={(value: string) =>
+                                    setEventStartDate(value)
+                                }
+                            />
+                            <Input
+                                required
+                                label="Heure de début"
+                                type="time"
+                                value={eventStartTime}
+                                onChange={(value: string) =>
+                                    setEventStartTime(value)
+                                }
+                            />
+                        </div>
+                        <div className="modal-datetime-group">
+                            <Input
+                                required
+                                label="Date de fin"
+                                type="date"
+                                value={eventEndDate}
+                                onChange={(value: string) =>
+                                    setEventEndDate(value)
+                                }
+                            />
+                            <Input
+                                required
+                                label="Heure de fin"
+                                type="time"
+                                value={eventEndTime}
+                                onChange={(value: string) =>
+                                    setEventEndTime(value)
+                                }
+                            />
+                        </div>
                     </div>
                     <div className="modal-badge-input-container">
                         <label htmlFor="badge">Label de l'événement</label>
