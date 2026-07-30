@@ -1,7 +1,6 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import './ModalCreateEvent.css';
 import { useModalManager } from '../../hooks/useModelManager';
-import { useState } from 'react';
 import Input from '../Input/Input';
 import Button from '../Button/Button';
 import Badge from '../Badge/Badge';
@@ -49,6 +48,8 @@ const ModalCreateEvent = ({
     const [eventEndTime, setEventEndTime] = useState('');
     const [eventDescription, setEventDescription] = useState('');
     const [selectedBadge, setSelectedBadge] = useState<string>('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const isSubmittingRef = useRef(false);
 
     const eventDateStart = buildDateTimeValue(eventStartDate, eventStartTime);
     const eventDateEnd = buildDateTimeValue(eventEndDate, eventEndTime);
@@ -61,8 +62,19 @@ const ModalCreateEvent = ({
         { label: 'Autre', color: '#e7d3fa' },
     ];
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    useEffect(() => {
+        if (isOpen) {
+            isSubmittingRef.current = false;
+            setIsSubmitting(false);
+        }
+    }, [isOpen]);
+
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+
+        if (isSubmittingRef.current) {
+            return;
+        }
 
         if (
             !eventTitle ||
@@ -102,38 +114,47 @@ const ModalCreateEvent = ({
         }
 
         setErrorMessage('');
-        fetch(`${getApiUrl()}/event/`, {
-            method: 'POST',
-            headers: getHeaders(),
-            body: JSON.stringify({
-                title: eventTitle,
-                description: eventDescription,
-                user_mail: userMail,
-                start: eventDateStart,
-                end: eventDateEnd,
-                color:
-                    badgesData.find((badge) => badge.label === selectedBadge)
-                        ?.color || '',
-                badge: selectedBadge,
-            }),
-        })
-            .then(async (response) => {
-                const data = await response.json();
-                if (!response.ok) {
-                    throw new Error(
-                        data.detail ||
-                            data.message ||
-                            "Erreur lors de la création de l'événement."
-                    );
-                }
-                if (onEventChange) {
-                    onEventChange();
-                }
-                handleClose();
-            })
-            .catch((error) => {
-                console.error('Error:', error);
+        isSubmittingRef.current = true;
+        setIsSubmitting(true);
+
+        try {
+            const response = await fetch(`${getApiUrl()}/event/`, {
+                method: 'POST',
+                headers: getHeaders(),
+                body: JSON.stringify({
+                    title: eventTitle,
+                    description: eventDescription,
+                    user_mail: userMail,
+                    start: eventDateStart,
+                    end: eventDateEnd,
+                    color:
+                        badgesData.find((badge) => badge.label === selectedBadge)
+                            ?.color || '',
+                    badge: selectedBadge,
+                }),
             });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(
+                    data.detail ||
+                        data.message ||
+                        "Erreur lors de la création de l'événement."
+                );
+            }
+            if (onEventChange) {
+                onEventChange();
+            }
+            handleClose();
+        } catch (error) {
+            console.error('Error:', error);
+            setErrorMessage(
+                error instanceof Error
+                    ? error.message
+                    : "Erreur lors de la création de l'événement."
+            );
+            isSubmittingRef.current = false;
+            setIsSubmitting(false);
+        }
     };
 
     if (!isOpen) return null;
@@ -240,7 +261,9 @@ const ModalCreateEvent = ({
                         <Button
                             type="submit"
                             component_type="primary"
-                            text="Créer"
+                            disabled={isSubmitting}
+                            aria-busy={isSubmitting}
+                            text={isSubmitting ? 'Création...' : 'Créer'}
                         />
                         <Button
                             type="button"
