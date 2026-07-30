@@ -12,14 +12,32 @@
 .text-input-label {
     font-weight: bold;
     overflow-wrap: anywhere;
+    color: var(--color-text);
 }
 
 .text-input-field {
     width: 100%;
     min-height: 44px;
     padding: 9px 10px;
-    border: 1px solid #ccc;
+    border: 1px solid #9ca3af;
     border-radius: 4px;
     box-sizing: border-box;
     font-size: 16px;
+    color: var(--color-text);
+    background-color: #ffffff;
+    transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+.text-input-field:hover {
+    border-color: #6b7280;
+}
+
+.text-input-field:focus-visible {
+    border-color: #0b63ce;
+}
+
+.text-input-field::placeholder {
+    color: #6b7280;
 }

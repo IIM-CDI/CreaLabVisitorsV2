@@ -17,6 +17,7 @@
     max-height: calc(100svh - 32px);
     overflow: auto;
     background-color: #ffffff;
+    color: var(--color-text);
     border-radius: 8px;
     box-shadow: 0 16px 40px rgba(0, 0, 0, 0.22);
 }
@@ -45,6 +46,10 @@
 
 .event-details-close:hover {
     background-color: rgba(255, 255, 255, 0.28);
+}
+
+.event-details-close:focus-visible {
+    outline-offset: 3px;
 }
 
 .event-details-heading {
@@ -90,7 +95,7 @@
 
 .event-details-description span,
 .event-details-row dt {
-    color: #555;
+    color: var(--color-muted);
     font-size: 0.8rem;
     font-weight: 800;
     text-transform: uppercase;
@@ -98,7 +103,7 @@
 
 .event-details-description p {
     margin-top: 6px;
-    color: #1a1a1a;
+    color: var(--color-text);
     line-height: 1.45;
     overflow-wrap: anywhere;
 }
@@ -128,7 +133,7 @@
 }
 
 .event-details-row dd {
-    color: #1a1a1a;
+    color: var(--color-text);
     font-size: 0.95rem;
     text-align: justify;
     overflow-wrap: anywhere;

@@ -27,10 +27,15 @@ const Input = ({
     className = '',
     onChange,
 }: InputProps) => {
+    const inputId = React.useId();
+
     return (
         <div className={`text-input ${className}`}>
-            <label className="text-input-label">{label}</label>
+            <label className="text-input-label" htmlFor={inputId}>
+                {label}
+            </label>
             <input
+                id={inputId}
                 type={type}
                 value={value}
                 placeholder={placeholder}

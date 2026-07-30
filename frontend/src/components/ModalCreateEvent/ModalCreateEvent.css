@@ -13,6 +13,7 @@
 .modal-content-create-event {
     background-color: #ffffff;
     padding: 20px;
+    color: var(--color-text);
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     width: min(450px, 100%);
@@ -57,6 +58,10 @@
     font-weight: bold;
 }
 
+.modal-badge-input-container span {
+    color: var(--color-text);
+}
+
 .modal-badge-container {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(125px, 1fr));
@@ -74,14 +79,19 @@
 
 .modal-info-text {
     font-size: 0.9rem;
-    color: #555;
+    color: var(--color-muted);
     font-style: italic;
 }
 
 .modal-error-text {
     font-size: 1rem;
-    color: red;
-    font-style: italic;
+    color: var(--color-error);
+    background-color: var(--color-error-bg);
+    border: 1px solid var(--color-error-border);
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-weight: 700;
+    overflow-wrap: anywhere;
 }
 
 @media (max-width: 480px) {

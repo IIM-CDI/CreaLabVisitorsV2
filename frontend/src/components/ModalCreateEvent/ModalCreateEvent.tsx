@@ -143,8 +143,13 @@ const ModalCreateEvent = ({
             className="modal-backdrop-create-event"
             onClick={handleBackdropClick}
         >
-            <div className="modal-content-create-event">
-                <h2>Créer un événement</h2>
+            <div
+                className="modal-content-create-event"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="create-event-title"
+            >
+                <h2 id="create-event-title">Créer un événement</h2>
                 <form className="modal-form" onSubmit={handleSubmit}>
                     <Input
                         required
@@ -201,8 +206,14 @@ const ModalCreateEvent = ({
                         </div>
                     </div>
                     <div className="modal-badge-input-container">
-                        <label htmlFor="badge">Label de l'événement</label>
-                        <div className="modal-badge-container">
+                        <span id="event-badge-label">
+                            Label de l'événement
+                        </span>
+                        <div
+                            className="modal-badge-container"
+                            role="group"
+                            aria-labelledby="event-badge-label"
+                        >
                             {badgesData.map((badge) => (
                                 <Badge
                                     key={badge.label}
@@ -216,7 +227,11 @@ const ModalCreateEvent = ({
                             ))}
                         </div>
                     </div>
-                    <p className="modal-error-text">{errorMessage}</p>
+                    {errorMessage && (
+                        <p className="modal-error-text" role="alert">
+                            {errorMessage}
+                        </p>
+                    )}
                     <p className="modal-info-text">
                         Les événements créés seront visibles par tous. Ils
                         devront être validés par un administrateur.

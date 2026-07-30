@@ -81,8 +81,13 @@ const ModalValidateEvent = ({
             className={`modal-backdrop-validate-event ${isOpen ? 'open' : ''}`}
             onClick={handleBackdropClick}
         >
-            <div className="modal-content-validate-event">
-                <h2>Valider les événements</h2>
+            <div
+                className="modal-content-validate-event"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="validate-events-title"
+            >
+                <h2 id="validate-events-title">Valider les événements</h2>
                 {eventInfo.map(([eventId, eventTitle], index) => (
                     <div key={index} className="event-item">
                         <p className="event-id">
