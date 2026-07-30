@@ -128,8 +128,9 @@ const ModalCreateEvent = ({
                     start: eventDateStart,
                     end: eventDateEnd,
                     color:
-                        badgesData.find((badge) => badge.label === selectedBadge)
-                            ?.color || '',
+                        badgesData.find(
+                            (badge) => badge.label === selectedBadge
+                        )?.color || '',
                     badge: selectedBadge,
                 }),
             });
@@ -227,9 +228,7 @@ const ModalCreateEvent = ({
                         </div>
                     </div>
                     <div className="modal-badge-input-container">
-                        <span id="event-badge-label">
-                            Label de l'événement
-                        </span>
+                        <span id="event-badge-label">Label de l'événement</span>
                         <div
                             className="modal-badge-container"
                             role="group"
