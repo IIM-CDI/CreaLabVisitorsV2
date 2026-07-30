@@ -74,14 +74,24 @@ const ModalCreateEvent = ({
             return;
         }
 
-        if (new Date(eventDateStart) >= new Date(eventDateEnd)) {
+        const startTime = new Date(eventDateStart).getTime();
+        const endTime = new Date(eventDateEnd).getTime();
+
+        if (startTime >= endTime) {
             setErrorMessage(
                 'La date de début doit être antérieure à la date de fin.'
             );
             return;
         }
 
-        if (new Date(eventDateStart) < new Date()) {
+        if (endTime - startTime < 30 * 60 * 1000) {
+            setErrorMessage(
+                "La durée de l'événement doit être d'au moins 30 minutes."
+            );
+            return;
+        }
+
+        if (startTime < Date.now()) {
             setErrorMessage('La date de début doit être dans le futur.');
             return;
         }

@@ -1,5 +1,7 @@
+from datetime import timedelta
 import os
 import re
+from html import escape
 
 import bcrypt
 from datetime_utils import (
@@ -9,8 +11,9 @@ from datetime_utils import (
     to_local_datetime_string,
 )
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 from generationICS import creer_invitation_ics
 from mailing import send_new_event_email, send_rejection_email, send_validation_email
 from pydantic import BaseModel
@@ -23,13 +26,9 @@ load_dotenv()
 app = FastAPI()
 
 FRONTEND_URL = os.getenv("FRONTEND_URL")
-FRONTEND_URLS = os.getenv("FRONTEND_URLS")
+PUBLIC_API_URL = os.getenv("BACKEND_URL")
 
-allow_origins = ["http://localhost:3000"]
-if FRONTEND_URLS:
-    allow_origins = [origin.strip() for origin in FRONTEND_URLS.split(",") if origin.strip()]
-elif FRONTEND_URL:
-    allow_origins = [FRONTEND_URL.strip()]
+allow_origins = [FRONTEND_URL.strip()]
 
 
 def notify_admin_or_log(action: str, callback, *args, **kwargs):
@@ -105,6 +104,105 @@ def ensure_text(value: str, field_name: str) -> str:
         )
     return cleaned_value
 
+
+def get_admin_email() -> str | None:
+    return os.getenv("SMTP_SENDER")
+
+
+def build_event_action_url(request: Request, action: str, event_id: int) -> str:
+    base_url = PUBLIC_API_URL or str(request.base_url)
+    return f"{base_url.rstrip('/')}/event/{action}/{event_id}"
+
+
+def render_event_action_page(title: str, message: str, color: str, status_code: int = 200) -> HTMLResponse:
+    return HTMLResponse(
+        content=f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{escape(title)}</title>
+</head>
+<body style="margin: 0; padding: 32px; background: #f3f6f8; font-family: Arial, Helvetica, sans-serif; color: #2b2f33;">
+    <main style="max-width: 560px; margin: 0 auto; background: #ffffff; border: 1px solid #d9e2ec; border-radius: 8px; overflow: hidden;">
+        <div style="padding: 22px 26px; background: {color}; color: #ffffff;">
+            <h1 style="margin: 0; font-size: 22px;">{escape(title)}</h1>
+        </div>
+        <div style="padding: 24px 26px; font-size: 15px; line-height: 1.55;">
+            <p>{escape(message)}</p>
+        </div>
+    </main>
+</body>
+</html>""",
+        status_code=status_code,
+    )
+
+
+def get_event_response_or_404(event_id: int):
+    if not event_id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="l'ID de l'événement est requis")
+    response = supabase.table("CreaLab_events").select("*").eq("id", event_id).execute()
+    if not response.data:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Evénement non trouvé")
+    return response
+
+
+def is_event_accepted(event: dict) -> bool:
+    return event.get("accepted") is True or str(event.get("accepted")).lower() == "true"
+
+
+def create_event_ics(event_id: int, event: dict) -> str:
+    return creer_invitation_ics(
+        sujet=event["title"],
+        debut=get_event_datetime(event, "start"),
+        fin=get_event_datetime(event, "end"),
+        organisateur=event["user_mail"],
+        participants=[event["user_mail"]],
+        description=event["description"],
+        lieu="CreaLab",
+        fichier=os.path.join("/tmp", f"crealab-event-{event_id}.ics"),
+    )
+
+
+def validate_event_and_notify(event_id: int):
+    response = get_event_response_or_404(event_id)
+    event = response.data[0]
+    if is_event_accepted(event):
+        return response, False
+
+    supabase.table("CreaLab_events").update({"accepted": True}).eq("id", event_id).execute()
+    event["accepted"] = True
+    ics_path = create_event_ics(event_id, event)
+    print(f"ICS file created: {ics_path}")
+    notify_admin_or_log(
+        "Validation notification",
+        send_validation_email,
+        admin_email=get_admin_email(),
+        recipient=event["user_mail"],
+        response=response,
+        attachments=[ics_path],
+    )
+    return response, True
+
+
+def reject_event_and_notify(event_id: int):
+    response = get_event_response_or_404(event_id)
+    if is_event_accepted(response.data[0]):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Un événement déjà validé ne peut pas être refusé",
+        )
+
+    supabase.table("CreaLab_events").delete().eq("id", event_id).execute()
+    notify_admin_or_log(
+        "Rejection notification",
+        send_rejection_email,
+        admin_email=get_admin_email(),
+        recipient=response.data[0]["user_mail"],
+        response=response,
+    )
+    return response
+
 #ROUTES HEALTH
 
 @app.get("/")
@@ -179,7 +277,7 @@ async def delete_user(email: str):
 #ROUTES EVENEMENTS
 
 @app.post("/event/")
-async def create_event(payload: EventCreateRequest):
+async def create_event(payload: EventCreateRequest, request: Request):
     title = ensure_text(payload.title, "Title")
     description = ensure_text(payload.description, "Description")
     user_mail = normalize_email(ensure_text(payload.user_mail, "User mail"))
@@ -196,6 +294,8 @@ async def create_event(payload: EventCreateRequest):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Format de date invalide")
     if end_dt <= start_dt:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="L'heure de fin doit être après l'heure de début")
+    if end_dt - start_dt < timedelta(minutes=30):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="La durée de l'événement ne peut pas être inférieure à 30 minutes")
     response = supabase.table("CreaLab_visitors").select("first_name", "last_name").eq("email", user_mail).execute()
     if not response.data:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Utilisateur non trouvé")
@@ -208,8 +308,10 @@ async def create_event(payload: EventCreateRequest):
     notify_admin_or_log(
         "New event notification",
         send_new_event_email,
-        recipient=os.getenv("SMTP_SENDER"),
+        admin_email=get_admin_email(),
+        user_email=user_mail,
         data={
+            "id": next_id,
             "title": title,
             "description": description,
             "user": user,
@@ -218,6 +320,8 @@ async def create_event(payload: EventCreateRequest):
             "end": end_str,
             "badge": badge,
         },
+        validation_url=build_event_action_url(request, "validate", next_id),
+        rejection_url=build_event_action_url(request, "reject", next_id),
     )
     return {"message": "Event created", "id": next_id}
 
@@ -228,46 +332,53 @@ async def get_events():
 
 @app.delete("/event/reject/{event_id}")
 async def delete_event(event_id: int):
-    if not event_id:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="l'ID de l'événement est requis")
-    response = supabase.table("CreaLab_events").select("*").eq("id", event_id).execute()
-    if not response.data:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Evénement non trouvé")
-    supabase.table("CreaLab_events").delete().eq("id", event_id).execute()
-    notify_admin_or_log(
-        "Rejection notification",
-        send_rejection_email,
-        admin_email=os.getenv("SMTP_SENDER"),
-        recipient=response.data[0]["user_mail"],
-        response=response,
-    )
+    reject_event_and_notify(event_id)
     return {"message": "Event deleted"}
+
+
+@app.get("/event/reject/{event_id}", response_class=HTMLResponse)
+async def reject_event_from_email(event_id: int):
+    try:
+        response = reject_event_and_notify(event_id)
+    except HTTPException as exc:
+        return render_event_action_page(
+            "Action impossible",
+            str(exc.detail),
+            "#c62828",
+            status_code=exc.status_code,
+        )
+    return render_event_action_page(
+        "Refus confirmé",
+        f"L'événement {response.data[0]['title']} a bien été refusé.",
+        "#c62828",
+    )
+
 
 @app.put("/event/validate/{event_id}")
 async def update_event(event_id: int):
-    if not event_id:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="l'ID de l'événement est requis")
-    response = supabase.table("CreaLab_events").select("*").eq("id", event_id).execute()
-    if not response.data:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Evénement non trouvé")
-    supabase.table("CreaLab_events").update({"accepted": True}).eq("id", event_id).execute()
-    event = response.data[0]
-    ICS = creer_invitation_ics(
-        sujet=event["title"],
-        debut=get_event_datetime(event, "start"),
-        fin=get_event_datetime(event, "end"),
-        organisateur=os.getenv("SMTP_SENDER"),
-        participants=[event["user_mail"]],
-        description=event["description"],
-        lieu="CreaLab",
+    _, updated = validate_event_and_notify(event_id)
+    return {"message": "Event updated" if updated else "Event already validated"}
+
+
+@app.get("/event/validate/{event_id}", response_class=HTMLResponse)
+async def validate_event_from_email(event_id: int):
+    try:
+        response, updated = validate_event_and_notify(event_id)
+    except HTTPException as exc:
+        return render_event_action_page(
+            "Action impossible",
+            str(exc.detail),
+            "#c62828",
+            status_code=exc.status_code,
+        )
+    if not updated:
+        return render_event_action_page(
+            "Événement déjà validé",
+            f"L'événement {response.data[0]['title']} était déjà validé. Aucun nouvel e-mail n'a été envoyé.",
+            "#198754",
+        )
+    return render_event_action_page(
+        "Événement validé",
+        f"L'événement {response.data[0]['title']} a bien été validé.",
+        "#198754",
     )
-    print(f"ICS file created: {ICS}")
-    notify_admin_or_log(
-        "Validation notification",
-        send_validation_email,
-        admin_email=os.getenv("SMTP_SENDER"), # REMPLACER ICI PAR LE MAIL CODING
-        recipient=response.data[0]["user_mail"],
-        response=response,
-        attachments=[ICS],
-    )
-    return {"message": "Event updated"}
