@@ -59,14 +59,19 @@ const ModalViewEvent = ({
 
     const upcomingEvents = useMemo(() => {
         const now = Date.now();
-        const normalizedUserName = userMail.split('@')[0].split('.').join('').toLowerCase();
+        const normalizedUserName = userMail
+            .split('@')[0]
+            .split('.')
+            .join('')
+            .toLowerCase();
 
         return events
             .filter((event) => {
                 const startTime = getEventTime(event.start);
 
                 return (
-                    event.user?.split(' ').join('').toLowerCase() === normalizedUserName &&
+                    event.user?.split(' ').join('').toLowerCase() ===
+                        normalizedUserName &&
                     startTime !== null &&
                     startTime >= now
                 );
