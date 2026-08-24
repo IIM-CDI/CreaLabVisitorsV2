@@ -16,6 +16,44 @@ const buildDateTimeValue = (date: string, time: string) => {
     return `${date}T${time}`;
 };
 
+const TIME_STEP_SECONDS = 15 * 60;
+const SECONDS_PER_DAY = 86400;
+
+const padTimePart = (value: number) => String(value).padStart(2, '0');
+
+const roundToQuarterHour = (timeValue: string) => {
+    if (!timeValue) return '';
+
+    const [hoursValue, minutesValue = '0', secondsValue = '0'] =
+        timeValue.split(':');
+    const hours = Number(hoursValue);
+    const minutes = Number(minutesValue);
+    const seconds = Number(secondsValue);
+
+    if (
+        !Number.isInteger(hours) ||
+        !Number.isInteger(minutes) ||
+        !Number.isInteger(seconds) ||
+        hours < 0 ||
+        hours > 23 ||
+        minutes < 0 ||
+        minutes > 59 ||
+        seconds < 0 ||
+        seconds > 59
+    ) {
+        return '';
+    }
+
+    const totalSeconds = hours * 60 * 60 + minutes * 60 + seconds;
+    const roundedSeconds =
+        Math.round(totalSeconds / TIME_STEP_SECONDS) * TIME_STEP_SECONDS;
+    const normalizedSeconds = roundedSeconds % SECONDS_PER_DAY;
+    const normalizedHours = Math.floor(normalizedSeconds / (60 * 60));
+    const normalizedMinutes = Math.floor((normalizedSeconds % (60 * 60)) / 60);
+
+    return `${padTimePart(normalizedHours)}:${padTimePart(normalizedMinutes)}`;
+};
+
 interface ModalCreateEventProps {
     isOpen: boolean;
     onClose: () => void;
@@ -52,8 +90,6 @@ const ModalCreateEvent = ({
     const [isSubmitting, setIsSubmitting] = useState(false);
     const isSubmittingRef = useRef(false);
 
-    const eventDateStart = buildDateTimeValue(eventStartDate, eventStartTime);
-    const eventDateEnd = buildDateTimeValue(eventEndDate, eventEndTime);
     const submittedBadgeLabel =
         selectedBadge === 'Autre'
             ? customBadgeLabel.trim() || 'Autre'
@@ -74,6 +110,14 @@ const ModalCreateEvent = ({
         }
     }, [isOpen]);
 
+    const handleStartTimeBlur = () => {
+        setEventStartTime(roundToQuarterHour(eventStartTime));
+    };
+
+    const handleEndTimeBlur = () => {
+        setEventEndTime(roundToQuarterHour(eventEndTime));
+    };
+
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
@@ -81,13 +125,31 @@ const ModalCreateEvent = ({
             return;
         }
 
-        if (!eventTitle || !eventDateStart || !eventDateEnd) {
+        const normalizedStartTime = roundToQuarterHour(eventStartTime);
+        const normalizedEndTime = roundToQuarterHour(eventEndTime);
+        const normalizedEventDateStart = buildDateTimeValue(
+            eventStartDate,
+            normalizedStartTime
+        );
+        const normalizedEventDateEnd = buildDateTimeValue(
+            eventEndDate,
+            normalizedEndTime
+        );
+
+        setEventStartTime(normalizedStartTime);
+        setEventEndTime(normalizedEndTime);
+
+        if (
+            !eventTitle ||
+            !normalizedEventDateStart ||
+            !normalizedEventDateEnd
+        ) {
             setErrorMessage('Veuillez remplir les champs obligatoires.');
             return;
         }
 
-        const startTime = new Date(eventDateStart).getTime();
-        const endTime = new Date(eventDateEnd).getTime();
+        const startTime = new Date(normalizedEventDateStart).getTime();
+        const endTime = new Date(normalizedEventDateEnd).getTime();
 
         if (startTime >= endTime) {
             setErrorMessage(
@@ -125,8 +187,8 @@ const ModalCreateEvent = ({
                     title: eventTitle,
                     description: eventDescription.trim(),
                     user_mail: userMail,
-                    start: eventDateStart,
-                    end: eventDateEnd,
+                    start: normalizedEventDateStart,
+                    end: normalizedEventDateEnd,
                     color:
                         badgesData.find(
                             (badge) => badge.label === selectedBadge
@@ -199,10 +261,12 @@ const ModalCreateEvent = ({
                                 required
                                 label="Heure de début"
                                 type="time"
+                                step={TIME_STEP_SECONDS}
                                 value={eventStartTime}
                                 onChange={(value: string) =>
                                     setEventStartTime(value)
                                 }
+                                onTimeBlur={handleStartTimeBlur}
                             />
                         </div>
                         <div className="modal-datetime-group">
@@ -219,12 +283,17 @@ const ModalCreateEvent = ({
                                 required
                                 label="Heure de fin"
                                 type="time"
+                                step={TIME_STEP_SECONDS}
                                 value={eventEndTime}
                                 onChange={(value: string) =>
                                     setEventEndTime(value)
                                 }
+                                onTimeBlur={handleEndTimeBlur}
                             />
                         </div>
+                    <p className="modal-info-text">
+                        L'heure de début et de fin sera arrondie à un quart d'heure près.
+                    </p>
                     </div>
                     <div className="modal-badge-input-container">
                         <span id="event-badge-label">Label de l'événement</span>
