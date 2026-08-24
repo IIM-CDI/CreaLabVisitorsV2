@@ -41,3 +41,7 @@
 .text-input-field::placeholder {
     color: #6b7280;
 }
+
+.text-input-required {
+    color: red;
+}

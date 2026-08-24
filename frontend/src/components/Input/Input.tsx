@@ -32,7 +32,8 @@ const Input = ({
     return (
         <div className={`text-input ${className}`}>
             <label className="text-input-label" htmlFor={inputId}>
-                {label}
+                {label}{' '}
+                {required && <span className="text-input-required">*</span>}
             </label>
             <input
                 id={inputId}
