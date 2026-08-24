@@ -76,9 +76,7 @@ const Badge = ({
             onClick={onClick}
             aria-pressed={selected}
             aria-label={
-                isCustomBadge
-                    ? 'Autre, préciser un label personnalisé'
-                    : label
+                isCustomBadge ? 'Autre, préciser un label personnalisé' : label
             }
         >
             {isCustomBadge ? (
