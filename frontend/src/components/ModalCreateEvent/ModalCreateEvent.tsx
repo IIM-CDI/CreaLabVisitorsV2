@@ -291,9 +291,10 @@ const ModalCreateEvent = ({
                                 onTimeBlur={handleEndTimeBlur}
                             />
                         </div>
-                    <p className="modal-info-text">
-                        L'heure de début et de fin sera arrondie à un quart d'heure près.
-                    </p>
+                        <p className="modal-info-text">
+                            L'heure de début et de fin sera arrondie à un quart
+                            d'heure près.
+                        </p>
                     </div>
                     <div className="modal-badge-input-container">
                         <span id="event-badge-label">Label de l'événement</span>
