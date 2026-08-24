@@ -76,13 +76,8 @@ const ModalCreateEvent = ({
             return;
         }
 
-        if (
-            !eventTitle ||
-            !eventDateStart ||
-            !eventDateEnd ||
-            !eventDescription
-        ) {
-            setErrorMessage('Veuillez remplir tous les champs.');
+        if (!eventTitle || !eventDateStart || !eventDateEnd) {
+            setErrorMessage('Veuillez remplir les champs obligatoires.');
             return;
         }
 
@@ -123,7 +118,7 @@ const ModalCreateEvent = ({
                 headers: getHeaders(),
                 body: JSON.stringify({
                     title: eventTitle,
-                    description: eventDescription,
+                    description: eventDescription.trim(),
                     user_mail: userMail,
                     start: eventDateStart,
                     end: eventDateEnd,
@@ -180,7 +175,6 @@ const ModalCreateEvent = ({
                         onChange={(value: string) => setEventTitle(value)}
                     />
                     <Input
-                        required
                         label="Description"
                         value={eventDescription}
                         onChange={(value: string) => setEventDescription(value)}

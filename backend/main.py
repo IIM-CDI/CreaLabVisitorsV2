@@ -1,6 +1,6 @@
-from datetime import timedelta
 import os
 import re
+from datetime import timedelta
 from html import escape
 
 import bcrypt
@@ -64,7 +64,7 @@ class PasswordUpdateRequest(BaseModel):
 
 class EventCreateRequest(BaseModel):
     title: str
-    description: str
+    description: str | None = None
     user_mail: str
     start: str
     end: str
@@ -158,7 +158,7 @@ def create_event_ics(event_id: int, event: dict) -> str:
         fin=get_event_datetime(event, "end"),
         organisateur=event["user_mail"],
         participants=[event["user_mail"]],
-        description=event["description"],
+        description=event.get("description") or "",
         lieu="CreaLab",
         fichier=os.path.join("/tmp", f"crealab-event-{event_id}.ics"),
     )
@@ -279,7 +279,7 @@ async def delete_user(email: str):
 @app.post("/event/")
 async def create_event(payload: EventCreateRequest, request: Request):
     title = ensure_text(payload.title, "Title")
-    description = ensure_text(payload.description, "Description")
+    description = (payload.description or "").strip()
     user_mail = normalize_email(ensure_text(payload.user_mail, "User mail"))
     start = ensure_text(payload.start, "Start")
     end = ensure_text(payload.end, "End")
