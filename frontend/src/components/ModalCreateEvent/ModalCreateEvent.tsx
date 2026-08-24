@@ -258,17 +258,17 @@ const ModalCreateEvent = ({
                     </p>
                     <div className="modal-buttons">
                         <Button
+                            type="button"
+                            component_type="danger"
+                            onClick={handleClose}
+                            text="Annuler"
+                        />
+                        <Button
                             type="submit"
                             component_type="primary"
                             disabled={isSubmitting}
                             aria-busy={isSubmitting}
                             text={isSubmitting ? 'Création...' : 'Créer'}
-                        />
-                        <Button
-                            type="button"
-                            component_type="danger"
-                            onClick={handleClose}
-                            text="Annuler"
                         />
                     </div>
                 </form>
