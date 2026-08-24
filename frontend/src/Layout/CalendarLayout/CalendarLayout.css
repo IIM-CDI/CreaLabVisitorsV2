@@ -2,23 +2,58 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    height: 100%;
+    height: 100vh;
+    height: 100svh;
+    min-height: 620px;
     width: 100%;
     background-color: #ffffff;
-    padding: 20px;
+    padding: clamp(10px, 2vw, 20px);
+    overflow: hidden;
 }
 
 .navbar {
     width: 100%;
     display: grid;
-    grid-template-columns: 1fr 6fr 1fr;
+    grid-template-columns: minmax(0, auto) minmax(0, 1fr) auto;
     align-items: center;
-    padding-bottom: 20px;
+    gap: 12px;
+    padding-bottom: clamp(10px, 2vw, 20px);
+}
+
+.navbar h1 {
+    color: #1a1a1a;
+    font-size: clamp(1rem, 2.4vw, 1.75rem);
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+}
+
+.open-modal-create-event-button-container {
+    justify-self: start;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    max-width: 100%;
+}
+
+.open-modal-create-event-button-container .button {
+    width: auto;
+    min-width: 170px;
+    margin: 0;
+}
+
+.navbar > .button {
+    justify-self: end;
+    width: auto;
+    min-width: 140px;
+    margin: 0;
 }
 
 .calendar-container {
-    height: 100%;
+    flex: 1;
+    min-height: 0;
     width: 100%;
+    overflow: hidden;
 }
 
 .fc {
@@ -30,9 +65,17 @@
     padding: 0 0 12px 0;
     margin-bottom: 0 !important;
     align-items: center;
+    gap: 8px;
 }
 
-.fc-toolbar-title {
+.fc-toolbar-chunk {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+}
+
+.fc .fc-toolbar-title {
     color: #1a1a1a;
     font-size: 1.3rem;
     font-weight: 700;
@@ -69,8 +112,13 @@
 }
 
 .fc-button-primary:focus {
-    box-shadow: 0 0 0 2px rgba(40, 114, 161, 0.3) !important;
+    box-shadow: 0 0 0 3px var(--color-focus-shadow) !important;
     outline: none !important;
+}
+
+.fc-button-primary:focus-visible {
+    outline: 3px solid var(--color-focus) !important;
+    outline-offset: 2px !important;
 }
 
 .fc-button-group .fc-button-primary {
@@ -158,6 +206,13 @@
     transform: scale(1.01);
 }
 
+.fc-event:focus,
+.fc-event:focus-visible {
+    outline: 3px solid var(--color-focus) !important;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 5px var(--color-focus-shadow) !important;
+}
+
 .fc-event-main-frame {
     display: flex;
     flex-direction: column;
@@ -169,21 +224,14 @@
 .fc-event-content {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 5px;
     min-width: 0;
 }
 
-.fc-event-time {
-    font-weight: 600;
-    font-size: 0.875rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
 .fc-event-title {
-    font-weight: 600;
-    font-size: 1.25rem;
+    font-weight: 700;
+    font-size: 1rem;
+    line-height: 1.2;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -202,15 +250,8 @@
     border: #1a1a1a 2px solid;
 }
 
-.fc-event-description {
-    font-size: 0.875rem;
-    font-style: italic;
-}
-
-.fc-event-user {
-    font-size: 0.875rem;
-    font-style: italic;
-    color: #555;
+.fc-daygrid-event {
+    margin-top: 2px !important;
 }
 
 .fc-timegrid-event .fc-event-main {
@@ -237,10 +278,10 @@
 
 .calendar-event-delete {
     position: absolute;
-    top: -5px;
-    right: -1px;
-    width: 14px;
-    height: 14px;
+    top: -7px;
+    right: -5px;
+    width: 24px;
+    height: 24px;
     border: none;
     background: transparent;
     color: #1a1a1a;
@@ -248,10 +289,16 @@
     line-height: 1;
     cursor: pointer;
     padding: 0;
+    border-radius: 50%;
 }
 
 .calendar-event-delete:hover {
-    opacity: 0.75;
+    background-color: rgba(255, 255, 255, 0.75);
+    opacity: 0.9;
+}
+
+.calendar-event-delete:focus-visible {
+    outline-offset: 1px;
 }
 
 .fc-event-dragging {
@@ -279,11 +326,11 @@
 }
 
 .open-modal-button-container {
-    position: absolute;
+    position: fixed;
     bottom: 55px;
     right: 60px;
 
-    z-index: 1001;
+    z-index: 900;
 }
 
 .open-modal-button {
@@ -303,4 +350,212 @@
 .open-modal-button:hover {
     filter: brightness(0.93);
     transform: scale(1.25);
+}
+
+.open-modal-button:focus-visible {
+    outline-offset: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .fc-event:hover,
+    .open-modal-button:hover {
+        transform: none;
+    }
+}
+
+@media (max-width: 900px) {
+    .navbar {
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-areas:
+            'actions logout'
+            'title title';
+    }
+
+    .open-modal-create-event-button-container {
+        grid-area: actions;
+        width: 100%;
+        max-width: 520px;
+        flex-wrap: nowrap;
+    }
+
+    .navbar h1 {
+        grid-area: title;
+        justify-self: start;
+        text-align: left;
+    }
+
+    .navbar > .button {
+        grid-area: logout;
+    }
+}
+
+@media (max-width: 700px) {
+    .calendar-layout {
+        height: auto;
+        min-height: 100vh;
+        min-height: 100svh;
+        overflow-x: hidden;
+        overflow-y: auto;
+        padding: 10px;
+    }
+
+    .navbar {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-areas:
+            'actions actions logout'
+            'title title title';
+        gap: 8px;
+    }
+
+    .navbar h1 {
+        justify-self: center;
+        text-align: center;
+        margin-top: 4px;
+    }
+
+    .open-modal-create-event-button-container,
+    .navbar > .button {
+        width: 100%;
+        justify-self: stretch;
+        min-width: 0;
+    }
+
+    .open-modal-create-event-button-container {
+        max-width: none;
+        gap: 6px;
+    }
+
+    .open-modal-create-event-button-container .button {
+        flex: 1 1 0;
+        min-width: 0;
+    }
+
+    .navbar .button {
+        min-height: 44px;
+        padding: 8px 6px;
+        font-size: 0.82rem;
+        line-height: 1.1;
+    }
+
+    .calendar-container {
+        min-height: 640px;
+        overflow-x: hidden;
+    }
+
+    .fc {
+        min-height: 640px;
+    }
+
+    .fc-toolbar {
+        flex-direction: row;
+        flex-wrap: nowrap;
+        align-items: center !important;
+        justify-content: space-between;
+        padding-bottom: 10px;
+        gap: 4px;
+    }
+
+    .fc-toolbar-chunk {
+        width: auto;
+        flex-wrap: nowrap;
+        gap: 3px;
+    }
+
+    .fc-toolbar-chunk > :not(:first-child) {
+        margin-left: 3px !important;
+    }
+
+    .fc-toolbar-chunk:nth-child(2) {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .fc .fc-toolbar-title {
+        font-size: clamp(0.9rem, 3.2vw, 1.1rem);
+        line-height: 1.1;
+        margin: 0;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .fc-button-primary {
+        min-height: 36px;
+        padding: 5px 7px !important;
+        font-size: 0.72rem;
+    }
+
+    .fc-col-header-cell {
+        padding: 4px 0;
+    }
+
+    .fc-col-header-cell-cushion {
+        font-size: 0.75rem;
+        padding: 3px 4px;
+    }
+
+    .fc-day-today .fc-col-header-cell-cushion {
+        padding: 3px 7px;
+    }
+
+    .fc-daygrid-day-number {
+        width: 24px;
+        height: 24px;
+        font-size: 0.75rem;
+    }
+
+    .fc-timegrid-slot {
+        height: 44px !important;
+    }
+
+    .fc-event {
+        border-radius: 6px !important;
+        padding: 3px 4px !important;
+    }
+
+    .fc-event-content {
+        gap: 3px;
+    }
+
+    .fc-event-title {
+        font-size: 0.82rem;
+        line-height: 1.12;
+    }
+
+    .fc-event-badge {
+        max-width: 100%;
+        padding: 1px 4px;
+        border-width: 1px;
+        font-size: 0.68rem;
+    }
+
+    .fc-daygrid-event .fc-event-content {
+        gap: 2px;
+    }
+
+    .fc-daygrid-event .fc-event-title {
+        font-size: 0.7rem;
+    }
+
+    .fc-daygrid-event .fc-event-badge {
+        font-size: 0.58rem;
+        padding: 1px 3px;
+    }
+
+    .fc-daygrid-day-frame {
+        min-height: 74px;
+    }
+
+    .open-modal-button-container {
+        right: 16px;
+        bottom: max(16px, env(safe-area-inset-bottom));
+    }
+
+    .open-modal-button {
+        width: 54px;
+        height: 54px;
+        padding: 0;
+        font-size: 2rem;
+    }
 }

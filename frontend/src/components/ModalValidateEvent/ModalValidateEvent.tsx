@@ -24,28 +24,54 @@ const ModalValidateEvent = ({
         onEventChange,
     });
 
-    const handleAcceptEvent = (eventId: string) => {
-        fetch(`${getApiUrl()}/event/validate/${eventId}`, {
-            method: 'PUT',
-            headers: getHeaders(),
-        })
-            .then((response) => response.json())
-            .catch((error) => {
-                console.error('Error:', error);
-            });
+    const handleAcceptEvent = async (eventId: string) => {
+        try {
+            const response = await fetch(
+                `${getApiUrl()}/event/validate/${eventId}`,
+                {
+                    method: 'PUT',
+                    headers: getHeaders(),
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error(
+                    `Request failed with status ${response.status}`
+                );
+            }
+
+            if (onEventChange) {
+                onEventChange();
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
 
         window.location.reload();
     };
 
-    const handleRejectEvent = (eventId: string) => {
-        fetch(`${getApiUrl()}/event/reject/${eventId}`, {
-            method: 'DELETE',
-            headers: getHeaders(),
-        })
-            .then((response) => response.json())
-            .catch((error) => {
-                console.error('Error:', error);
-            });
+    const handleRejectEvent = async (eventId: string) => {
+        try {
+            const response = await fetch(
+                `${getApiUrl()}/event/reject/${eventId}`,
+                {
+                    method: 'DELETE',
+                    headers: getHeaders(),
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error(
+                    `Request failed with status ${response.status}`
+                );
+            }
+
+            if (onEventChange) {
+                onEventChange();
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
 
         window.location.reload();
     };
@@ -55,8 +81,13 @@ const ModalValidateEvent = ({
             className={`modal-backdrop-validate-event ${isOpen ? 'open' : ''}`}
             onClick={handleBackdropClick}
         >
-            <div className="modal-content-validate-event">
-                <h2>Valider les événements</h2>
+            <div
+                className="modal-content-validate-event"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="validate-events-title"
+            >
+                <h2 id="validate-events-title">Valider les événements</h2>
                 {eventInfo.map(([eventId, eventTitle], index) => (
                     <div key={index} className="event-item">
                         <p className="event-id">

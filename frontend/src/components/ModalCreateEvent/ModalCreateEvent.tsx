@@ -1,17 +1,27 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import './ModalCreateEvent.css';
 import { useModalManager } from '../../hooks/useModelManager';
-import { useState } from 'react';
 import Input from '../Input/Input';
 import Button from '../Button/Button';
 import Badge from '../Badge/Badge';
 import { useApi } from '../../hooks/useAPI';
+
+const splitDateTimeValue = (dateTimeValue: string) => {
+    const [date = '', time = ''] = dateTimeValue.split('T');
+    return { date, time };
+};
+
+const buildDateTimeValue = (date: string, time: string) => {
+    if (!date || !time) return '';
+    return `${date}T${time}`;
+};
 
 interface ModalCreateEventProps {
     isOpen: boolean;
     onClose: () => void;
     onEventChange?: () => void;
     userMail: string;
+    clickedTime?: string | null;
 }
 
 const ModalCreateEvent = ({
@@ -19,6 +29,7 @@ const ModalCreateEvent = ({
     onClose,
     onEventChange,
     userMail,
+    clickedTime,
 }: ModalCreateEventProps) => {
     const { getApiUrl, getHeaders } = useApi();
     const { handleClose, handleBackdropClick } = useModalManager({
@@ -26,23 +37,44 @@ const ModalCreateEvent = ({
         onClose,
         onEventChange,
     });
+    const clickedTimeValue = clickedTime ? clickedTime.slice(0, 16) : '';
+    const clickedTimeParts = splitDateTimeValue(clickedTimeValue);
+
     const [errorMessage, setErrorMessage] = useState('');
     const [eventTitle, setEventTitle] = useState('');
-    const [eventDateStart, setEventDateStart] = useState('');
-    const [eventDateEnd, setEventDateEnd] = useState('');
+    const [eventStartDate, setEventStartDate] = useState(clickedTimeParts.date);
+    const [eventStartTime, setEventStartTime] = useState(clickedTimeParts.time);
+    const [eventEndDate, setEventEndDate] = useState('');
+    const [eventEndTime, setEventEndTime] = useState('');
     const [eventDescription, setEventDescription] = useState('');
     const [selectedBadge, setSelectedBadge] = useState<string>('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const isSubmittingRef = useRef(false);
+
+    const eventDateStart = buildDateTimeValue(eventStartDate, eventStartTime);
+    const eventDateEnd = buildDateTimeValue(eventEndDate, eventEndTime);
 
     const badgesData = [
         { label: 'Impression perso', color: '#fbd2c9' },
         { label: 'Impression école', color: '#f9e2b3' },
         { label: 'Electronique', color: '#b7d5f5' },
         { label: 'Peinture', color: '#acecde' },
-        { label: 'Autre', color: '#aaaaaa' },
+        { label: 'Autre', color: '#e7d3fa' },
     ];
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    useEffect(() => {
+        if (isOpen) {
+            isSubmittingRef.current = false;
+            setIsSubmitting(false);
+        }
+    }, [isOpen]);
+
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+
+        if (isSubmittingRef.current) {
+            return;
+        }
 
         if (
             !eventTitle ||
@@ -54,14 +86,24 @@ const ModalCreateEvent = ({
             return;
         }
 
-        if (new Date(eventDateStart) >= new Date(eventDateEnd)) {
+        const startTime = new Date(eventDateStart).getTime();
+        const endTime = new Date(eventDateEnd).getTime();
+
+        if (startTime >= endTime) {
             setErrorMessage(
                 'La date de début doit être antérieure à la date de fin.'
             );
             return;
         }
 
-        if (new Date(eventDateStart) < new Date()) {
+        if (endTime - startTime < 30 * 60 * 1000) {
+            setErrorMessage(
+                "La durée de l'événement doit être d'au moins 30 minutes."
+            );
+            return;
+        }
+
+        if (startTime < Date.now()) {
             setErrorMessage('La date de début doit être dans le futur.');
             return;
         }
@@ -72,38 +114,48 @@ const ModalCreateEvent = ({
         }
 
         setErrorMessage('');
-        fetch(`${getApiUrl()}/event/`, {
-            method: 'POST',
-            headers: getHeaders(),
-            body: JSON.stringify({
-                title: eventTitle,
-                description: eventDescription,
-                user_mail: userMail,
-                start: eventDateStart,
-                end: eventDateEnd,
-                color:
-                    badgesData.find((badge) => badge.label === selectedBadge)
-                        ?.color || '',
-                badge: selectedBadge,
-            }),
-        })
-            .then(async (response) => {
-                const data = await response.json();
-                if (!response.ok) {
-                    throw new Error(
-                        data.detail ||
-                            data.message ||
-                            "Erreur lors de la création de l'événement."
-                    );
-                }
-                if (onEventChange) {
-                    onEventChange();
-                }
-                handleClose();
-            })
-            .catch((error) => {
-                console.error('Error:', error);
+        isSubmittingRef.current = true;
+        setIsSubmitting(true);
+
+        try {
+            const response = await fetch(`${getApiUrl()}/event/`, {
+                method: 'POST',
+                headers: getHeaders(),
+                body: JSON.stringify({
+                    title: eventTitle,
+                    description: eventDescription,
+                    user_mail: userMail,
+                    start: eventDateStart,
+                    end: eventDateEnd,
+                    color:
+                        badgesData.find(
+                            (badge) => badge.label === selectedBadge
+                        )?.color || '',
+                    badge: selectedBadge,
+                }),
             });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(
+                    data.detail ||
+                        data.message ||
+                        "Erreur lors de la création de l'événement."
+                );
+            }
+            if (onEventChange) {
+                onEventChange();
+            }
+            handleClose();
+        } catch (error) {
+            console.error('Error:', error);
+            setErrorMessage(
+                error instanceof Error
+                    ? error.message
+                    : "Erreur lors de la création de l'événement."
+            );
+            isSubmittingRef.current = false;
+            setIsSubmitting(false);
+        }
     };
 
     if (!isOpen) return null;
@@ -113,8 +165,13 @@ const ModalCreateEvent = ({
             className="modal-backdrop-create-event"
             onClick={handleBackdropClick}
         >
-            <div className="modal-content-create-event">
-                <h2>Créer un événement</h2>
+            <div
+                className="modal-content-create-event"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="create-event-title"
+            >
+                <h2 id="create-event-title">Créer un événement</h2>
                 <form className="modal-form" onSubmit={handleSubmit}>
                     <Input
                         required
@@ -129,26 +186,54 @@ const ModalCreateEvent = ({
                         onChange={(value: string) => setEventDescription(value)}
                     />
                     <div className="modal-datetime-inputs">
-                        <Input
-                            required
-                            label="Date de début"
-                            type="datetime-local"
-                            value={eventDateStart}
-                            onChange={(value: string) =>
-                                setEventDateStart(value)
-                            }
-                        />
-                        <Input
-                            required
-                            label="Date de fin"
-                            type="datetime-local"
-                            value={eventDateEnd}
-                            onChange={(value: string) => setEventDateEnd(value)}
-                        />
+                        <div className="modal-datetime-group">
+                            <Input
+                                required
+                                label="Date de début"
+                                type="date"
+                                value={eventStartDate}
+                                onChange={(value: string) =>
+                                    setEventStartDate(value)
+                                }
+                            />
+                            <Input
+                                required
+                                label="Heure de début"
+                                type="time"
+                                value={eventStartTime}
+                                onChange={(value: string) =>
+                                    setEventStartTime(value)
+                                }
+                            />
+                        </div>
+                        <div className="modal-datetime-group">
+                            <Input
+                                required
+                                label="Date de fin"
+                                type="date"
+                                value={eventEndDate}
+                                onChange={(value: string) =>
+                                    setEventEndDate(value)
+                                }
+                            />
+                            <Input
+                                required
+                                label="Heure de fin"
+                                type="time"
+                                value={eventEndTime}
+                                onChange={(value: string) =>
+                                    setEventEndTime(value)
+                                }
+                            />
+                        </div>
                     </div>
                     <div className="modal-badge-input-container">
-                        <label htmlFor="badge">Label de l'événement</label>
-                        <div className="modal-badge-container">
+                        <span id="event-badge-label">Label de l'événement</span>
+                        <div
+                            className="modal-badge-container"
+                            role="group"
+                            aria-labelledby="event-badge-label"
+                        >
                             {badgesData.map((badge) => (
                                 <Badge
                                     key={badge.label}
@@ -162,7 +247,11 @@ const ModalCreateEvent = ({
                             ))}
                         </div>
                     </div>
-                    <p className="modal-error-text">{errorMessage}</p>
+                    {errorMessage && (
+                        <p className="modal-error-text" role="alert">
+                            {errorMessage}
+                        </p>
+                    )}
                     <p className="modal-info-text">
                         Les événements créés seront visibles par tous. Ils
                         devront être validés par un administrateur.
@@ -171,7 +260,9 @@ const ModalCreateEvent = ({
                         <Button
                             type="submit"
                             component_type="primary"
-                            text="Créer"
+                            disabled={isSubmitting}
+                            aria-busy={isSubmitting}
+                            text={isSubmitting ? 'Création...' : 'Créer'}
                         />
                         <Button
                             type="button"

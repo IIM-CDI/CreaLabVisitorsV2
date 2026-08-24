@@ -14,22 +14,24 @@ const LoginLayout = () => {
                 {LoggingIn ? (
                     <>
                         <p>Pas encore inscrit.e ?</p>
-                        <p
+                        <button
+                            type="button"
                             className="clickable-text"
                             onClick={() => setLoggingIn(false)}
                         >
                             S'inscrire
-                        </p>
+                        </button>
                     </>
                 ) : (
                     <>
                         <p>Déjà inscrit.e ?</p>
-                        <p
+                        <button
+                            type="button"
                             className="clickable-text"
                             onClick={() => setLoggingIn(true)}
                         >
                             Se connecter
-                        </p>
+                        </button>
                     </>
                 )}
             </div>

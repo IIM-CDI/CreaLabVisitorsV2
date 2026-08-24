@@ -10,16 +10,17 @@ interface BadgeProps {
 
 const Badge = ({ label, selected, color, onClick }: BadgeProps) => {
     return (
-        <div
-            className={`badge ${label} ${selected ? 'selected' : ''}`}
+        <button
+            type="button"
+            className={`badge ${selected ? 'selected' : ''}`.trim()}
             style={{
                 backgroundColor: color,
-                outline: selected ? '2px solid #000' : 'none',
             }}
             onClick={onClick}
+            aria-pressed={selected}
         >
             <p>{label}</p>
-        </div>
+        </button>
     );
 };
 

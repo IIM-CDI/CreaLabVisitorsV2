@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 
 export const useApi = () => {
     const getApiUrl = useCallback(() => {
-        return process.env.API_URL || 'http://localhost:8000';
+        return process.env.REACT_APP_API_URL || 'http://localhost:8000';
     }, []);
 
     const getHeaders = useCallback(() => {
