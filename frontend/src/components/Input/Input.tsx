@@ -15,6 +15,8 @@ interface InputProps {
     required?: boolean;
     placeholder?: string;
     className?: string;
+    step?: React.InputHTMLAttributes<HTMLInputElement>['step'];
+    onTimeBlur?: () => void;
     onChange: (value: string) => void;
 }
 
@@ -25,9 +27,16 @@ const Input = ({
     required = false,
     placeholder = '',
     className = '',
+    step,
+    onTimeBlur,
     onChange,
 }: InputProps) => {
     const inputId = React.useId();
+    const handleBlur = () => {
+        if (type === 'time') {
+            onTimeBlur?.();
+        }
+    };
 
     return (
         <div className={`text-input ${className}`}>
@@ -41,8 +50,10 @@ const Input = ({
                 value={value}
                 placeholder={placeholder}
                 onChange={(e) => onChange(e.target.value)}
+                onBlur={handleBlur}
                 className="text-input-field"
                 required={required}
+                step={step}
             />
         </div>
     );
