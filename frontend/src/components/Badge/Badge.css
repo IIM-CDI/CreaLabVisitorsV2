@@ -14,6 +14,7 @@
     cursor: pointer;
     transition:
         border-color 0.15s ease,
+        background-color 0.15s ease,
         box-shadow 0.15s ease,
         filter 0.15s ease,
         transform 0.1s ease;
@@ -37,8 +38,118 @@
     margin: 0;
 }
 
+.badge-custom {
+    grid-column: 2 / -1;
+    border-style: dashed;
+    border-color: #6b21a8;
+    color: #3b0764;
+}
+
+.badge-custom:hover {
+    border-color: #3b0764;
+    background-color: #f3e8ff !important;
+}
+
+.badge-custom.selected {
+    border-style: solid;
+    background-color: #f3e8ff !important;
+}
+
+.badge-custom-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    min-width: 0;
+}
+
+.badge-custom-label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    min-width: 0;
+}
+
+.badge-custom-hint {
+    font-size: 0.75rem;
+    font-weight: 800;
+    line-height: 1.1;
+    color: #581c87;
+    text-transform: uppercase;
+}
+
+.badge-edit-icon {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 16px;
+    fill: currentColor;
+}
+
+.badge-editable {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 32px;
+    gap: 10px;
+    justify-content: stretch;
+    min-height: 48px;
+    padding: 0.55rem 0.65rem 0.55rem 0.85rem;
+    border-color: #6b21a8;
+    background-color: #faf5ff !important;
+    box-shadow: none;
+    cursor: text;
+}
+
+.badge-editable:focus-within {
+    outline: none;
+    border-color: #581c87;
+    box-shadow: 0 0 0 3px rgba(107, 33, 168, 0.18);
+}
+
+.badge-editable .badge-edit-icon {
+    align-self: center;
+    justify-self: center;
+    width: 30px;
+    height: 30px;
+    padding: 7px;
+    border-radius: 4px;
+    background-color: #ede9fe;
+}
+
+.badge-input {
+    width: 100%;
+    min-width: 0;
+    border: none;
+    border-bottom: 2px solid currentColor;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-weight: 700;
+    text-align: left;
+    outline: none;
+    padding: 2px 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.badge-input::placeholder {
+    color: #581c87;
+    opacity: 1;
+}
+
+.badge-input:focus-visible {
+    outline: none;
+    box-shadow: none;
+}
+
 .form {
     font-size: 0.875rem;
     font-weight: bold;
     width: auto;
+}
+
+@media (max-width: 480px) {
+    .badge-custom {
+        grid-column: 1 / -1;
+    }
 }

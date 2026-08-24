@@ -48,11 +48,16 @@ const ModalCreateEvent = ({
     const [eventEndTime, setEventEndTime] = useState('');
     const [eventDescription, setEventDescription] = useState('');
     const [selectedBadge, setSelectedBadge] = useState<string>('');
+    const [customBadgeLabel, setCustomBadgeLabel] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const isSubmittingRef = useRef(false);
 
     const eventDateStart = buildDateTimeValue(eventStartDate, eventStartTime);
     const eventDateEnd = buildDateTimeValue(eventEndDate, eventEndTime);
+    const submittedBadgeLabel =
+        selectedBadge === 'Autre'
+            ? customBadgeLabel.trim() || 'Autre'
+            : selectedBadge;
 
     const badgesData = [
         { label: 'Impression perso', color: '#fbd2c9' },
@@ -126,7 +131,7 @@ const ModalCreateEvent = ({
                         badgesData.find(
                             (badge) => badge.label === selectedBadge
                         )?.color || '',
-                    badge: selectedBadge,
+                    badge: submittedBadgeLabel,
                 }),
             });
             const data = await response.json().catch(() => ({}));
@@ -237,6 +242,15 @@ const ModalCreateEvent = ({
                                     onClick={() =>
                                         setSelectedBadge(badge.label)
                                     }
+                                    customLabel={
+                                        badge.label === 'Autre'
+                                            ? customBadgeLabel
+                                            : undefined
+                                    }
+                                    onCustomLabelChange={(value: string) => {
+                                        setCustomBadgeLabel(value);
+                                        setSelectedBadge('Autre');
+                                    }}
                                 />
                             ))}
                         </div>
