@@ -12,6 +12,7 @@ import ModalCreateEvent from '../../components/ModalCreateEvent/ModalCreateEvent
 import ModalEventDetails, {
     EventDetails,
 } from '../../components/ModalEventDetails/ModalEventDetails';
+import ModalViewEvent from '../../components/ModalViewEvent/ModalViewEvent';
 import Button from '../../components/Button/Button';
 import { useApi } from '../../hooks/useAPI';
 
@@ -22,6 +23,7 @@ interface CalendarLayoutProps {
 const CalendarLayout = ({ user }: CalendarLayoutProps) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isValidateModalOpen, setIsValidateModalOpen] = useState(false);
+    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
     const [selectedEvent, setSelectedEvent] = useState<EventDetails | null>(
         null
     );
@@ -189,24 +191,27 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
         <div className="calendar-layout">
             <div className="navbar">
                 <div className="open-modal-create-event-button-container">
+                    <Button
+                        className="navbar-event-button"
+                        component_type="secondary"
+                        type="button"
+                        text="Mes événements"
+                        onClick={() => setIsViewModalOpen(true)}
+                        aria-haspopup="dialog"
+                        aria-expanded={isViewModalOpen}
+                    />
                     {isAdmin && (
                         <Button
+                            className="navbar-event-button"
                             component_type="primary"
                             type="button"
                             text="Valider les événements"
                             onClick={() => setIsValidateModalOpen(true)}
+                            aria-haspopup="dialog"
+                            aria-expanded={isValidateModalOpen}
                         />
                     )}
                 </div>
-                {isValidateModalOpen && (
-                    <ModalValidateEvent
-                        isOpen={isValidateModalOpen}
-                        onClose={() => setIsValidateModalOpen(false)}
-                        eventInfo={events
-                            .filter((event) => !event.accepted)
-                            .map((event) => [event.id, event.title])}
-                    />
-                )}
                 <h1>Bienvenue au CreaLab {emailToName(user.email)}</h1>
                 <Button
                     type="button"
@@ -215,6 +220,23 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
                     text="Déconnexion"
                 />
             </div>
+            {isViewModalOpen && (
+                <ModalViewEvent
+                    isOpen={isViewModalOpen}
+                    onClose={() => setIsViewModalOpen(false)}
+                    events={events}
+                    userMail={user.email}
+                />
+            )}
+            {isValidateModalOpen && (
+                <ModalValidateEvent
+                    isOpen={isValidateModalOpen}
+                    onClose={() => setIsValidateModalOpen(false)}
+                    eventInfo={events
+                        .filter((event) => !event.accepted)
+                        .map((event) => [event.id, event.title])}
+                />
+            )}
 
             <div className="calendar-container">
                 <Fullcalendar
@@ -242,17 +264,20 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
                 />
             </div>
 
-            {!isModalOpen && (
-                <div className="open-modal-button-container">
-                    <button
-                        className="open-modal-button"
-                        type="button"
-                        onClick={() => setIsModalOpen(true)}
-                    >
-                        +
-                    </button>
-                </div>
-            )}
+            {!isModalOpen &&
+                !isViewModalOpen &&
+                !isValidateModalOpen &&
+                !selectedEvent && (
+                    <div className="open-modal-button-container">
+                        <button
+                            className="open-modal-button"
+                            type="button"
+                            onClick={() => setIsModalOpen(true)}
+                        >
+                            +
+                        </button>
+                    </div>
+                )}
             {isModalOpen && (
                 <ModalCreateEvent
                     isOpen={isModalOpen}
