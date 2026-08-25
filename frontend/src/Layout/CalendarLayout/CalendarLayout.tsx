@@ -62,6 +62,7 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
     const [isAdmin, setIsAdmin] = useState(false);
     const [isCompactCalendar, setIsCompactCalendar] = useState(false);
     const [deletingEventId, setDeletingEventId] = useState<string | null>(null);
+    const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
 
     const checkAdminStatus = useCallback(async () => {
         const response = await fetch(`${getApiUrl()}/user/${user.email}`, {
@@ -130,8 +131,8 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
             minute: '2-digit' as const,
             hour12: false as const,
         },
-        slotMinTime: '08:00:00',
-        slotMaxTime: '20:00:00',
+        slotMinTime: '09:00:00',
+        slotMaxTime: '17:00:00',
         allDaySlot: false,
         editable: false,
         selectable: true,
@@ -226,6 +227,22 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
         return () => clearInterval(interval);
     }, []);
 
+    useEffect(() => {
+        const handleEscapeKey = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') {
+                setIsActionMenuOpen(false);
+            }
+        };
+
+        if (isActionMenuOpen) {
+            document.addEventListener('keydown', handleEscapeKey);
+        }
+
+        return () => {
+            document.removeEventListener('keydown', handleEscapeKey);
+        };
+    }, [isActionMenuOpen]);
+
     const closeCreateEventModal = () => {
         setIsModalOpen(false);
         setCalendarSelection(null);
@@ -316,30 +333,20 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
     return (
         <div className="calendar-layout">
             <div className="navbar">
-                <div className="open-modal-create-event-button-container">
-                    {viewEventButtons.map(({ scope, text }) => (
-                        <Button
-                            key={scope}
-                            className="navbar-event-button"
-                            component_type="secondary"
-                            type="button"
-                            text={text}
-                            onClick={() => setViewEventsScope(scope)}
-                            aria-haspopup="dialog"
-                            aria-expanded={viewEventsScope === scope}
-                        />
-                    ))}
-                    {isAdmin && (
-                        <Button
-                            className="navbar-event-button"
-                            component_type="primary"
-                            type="button"
-                            text="Valider les événements"
-                            onClick={() => setIsValidateModalOpen(true)}
-                            aria-haspopup="dialog"
-                            aria-expanded={isValidateModalOpen}
-                        />
-                    )}
+                <div className="navbar-menu-slot">
+                    <button
+                        className="navbar-menu-button"
+                        type="button"
+                        onClick={() => setIsActionMenuOpen(true)}
+                        aria-label="Ouvrir le menu"
+                        aria-haspopup="dialog"
+                        aria-controls="calendar-action-menu"
+                        aria-expanded={isActionMenuOpen}
+                    >
+                        <span aria-hidden="true" />
+                        <span aria-hidden="true" />
+                        <span aria-hidden="true" />
+                    </button>
                 </div>
                 <h1>Bienvenue au CreaLab {emailToName(user.email)}</h1>
                 <Button
@@ -349,6 +356,62 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
                     text="Déconnexion"
                 />
             </div>
+            {isActionMenuOpen && (
+                <div
+                    className="action-menu-backdrop"
+                    onClick={() => setIsActionMenuOpen(false)}
+                >
+                    <aside
+                        id="calendar-action-menu"
+                        className="action-menu-panel"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="calendar-action-menu-title"
+                        onClick={(event) => event.stopPropagation()}
+                    >
+                        <header className="action-menu-header">
+                            <h2 id="calendar-action-menu-title">Menu</h2>
+                            <button
+                                className="action-menu-close"
+                                type="button"
+                                onClick={() => setIsActionMenuOpen(false)}
+                                aria-label="Fermer le menu"
+                            >
+                                ×
+                            </button>
+                        </header>
+                        <div className="action-menu-buttons">
+                            {viewEventButtons.map(({ scope, text }) => (
+                                <Button
+                                    key={scope}
+                                    component_type="secondary"
+                                    type="button"
+                                    text={text}
+                                    onClick={() => {
+                                        setIsActionMenuOpen(false);
+                                        setViewEventsScope(scope);
+                                    }}
+                                    aria-haspopup="dialog"
+                                    aria-expanded={viewEventsScope === scope}
+                                />
+                            ))}
+                            {isAdmin && (
+                                <Button
+                                    component_type="primary"
+                                    type="button"
+                                    text="Valider les événements"
+                                    onClick={() => {
+                                        setIsActionMenuOpen(false);
+                                        setIsValidateModalOpen(true);
+                                    }}
+                                    aria-haspopup="dialog"
+                                    aria-expanded={isValidateModalOpen}
+                                />
+                            )}
+                        </div>
+                    </aside>
+                </div>
+            )}
             {viewEventsScope && (
                 <ModalViewEvent
                     isOpen={true}
@@ -404,7 +467,11 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
                                 </div>
                                 {canDeleteEvent(eventToDelete) && (
                                     <button
-                                        className="calendar-event-delete"
+                                        className={`calendar-event-delete ${
+                                            isDeleting
+                                                ? 'calendar-event-delete-loading'
+                                                : ''
+                                        }`.trim()}
                                         type="button"
                                         onClick={(event) => {
                                             event.preventDefault();
@@ -412,9 +479,20 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
                                             handleDeleteEvent(eventToDelete);
                                         }}
                                         disabled={isDeleting}
-                                        aria-label={`Supprimer l'événement ${arg.event.title}`}
+                                        aria-label={
+                                            isDeleting
+                                                ? `Suppression de l'événement ${arg.event.title}`
+                                                : `Supprimer l'événement ${arg.event.title}`
+                                        }
                                     >
-                                        ×
+                                        {isDeleting ? (
+                                            <span
+                                                className="calendar-event-delete-spinner"
+                                                aria-hidden="true"
+                                            />
+                                        ) : (
+                                            '×'
+                                        )}
                                     </button>
                                 )}
                             </div>
@@ -426,6 +504,7 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
             {!isModalOpen &&
                 !isViewModalOpen &&
                 !isValidateModalOpen &&
+                !isActionMenuOpen &&
                 !selectedEvent && (
                     <div className="open-modal-button-container">
                         <button
