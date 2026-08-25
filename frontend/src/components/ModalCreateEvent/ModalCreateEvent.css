@@ -8,6 +8,7 @@
     z-index: 1000;
     padding: 16px;
     overflow-y: auto;
+    animation: app-fade-in var(--motion-base) var(--ease-standard);
 }
 
 .modal-content-create-event {
@@ -20,6 +21,7 @@
     max-height: calc(100vh - 32px);
     max-height: calc(100svh - 32px);
     overflow-y: auto;
+    animation: app-rise-in var(--motion-slow) var(--ease-entrance);
 }
 
 .modal-content-create-event h2 {
@@ -81,6 +83,7 @@
     font-size: 0.9rem;
     color: var(--color-muted);
     font-style: italic;
+    transition: color var(--motion-base) var(--ease-standard);
 }
 
 .modal-error-text {
@@ -92,6 +95,7 @@
     padding: 10px 12px;
     font-weight: 700;
     overflow-wrap: anywhere;
+    animation: app-rise-in var(--motion-base) var(--ease-entrance);
 }
 
 @media (max-width: 480px) {

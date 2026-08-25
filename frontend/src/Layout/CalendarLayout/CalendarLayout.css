@@ -9,6 +9,7 @@
     background-color: #ffffff;
     padding: 18px;
     overflow: hidden;
+    animation: app-fade-in var(--motion-slow) var(--ease-standard);
 }
 
 .navbar {
@@ -48,9 +49,10 @@
     gap: 5px;
     padding: 0;
     transition:
-        background-color 0.15s ease,
-        border-color 0.15s ease,
-        box-shadow 0.15s ease;
+        background-color var(--motion-base) var(--ease-standard),
+        border-color var(--motion-base) var(--ease-standard),
+        box-shadow var(--motion-base) var(--ease-standard),
+        transform var(--motion-fast) var(--ease-standard);
 }
 
 .navbar-menu-button span {
@@ -58,11 +60,19 @@
     height: 2px;
     border-radius: 999px;
     background-color: currentColor;
+    transition:
+        opacity var(--motion-base) var(--ease-standard),
+        transform var(--motion-base) var(--ease-standard);
 }
 
 .navbar-menu-button:hover {
     background-color: #f3f4f6;
     border-color: #9ca3af;
+    transform: translateY(-1px);
+}
+
+.navbar-menu-button:active {
+    transform: translateY(0);
 }
 
 .navbar-menu-button:focus-visible {
@@ -84,6 +94,7 @@
     display: flex;
     align-items: stretch;
     justify-content: flex-start;
+    animation: app-fade-in var(--motion-base) var(--ease-standard);
 }
 
 .action-menu-panel {
@@ -96,6 +107,7 @@
     display: flex;
     flex-direction: column;
     gap: 18px;
+    animation: app-slide-in-left var(--motion-slow) var(--ease-entrance);
 }
 
 .action-menu-header {
@@ -121,10 +133,18 @@
     cursor: pointer;
     font-size: 1.5rem;
     line-height: 1;
+    transition:
+        background-color var(--motion-base) var(--ease-standard),
+        transform var(--motion-fast) var(--ease-standard);
 }
 
 .action-menu-close:hover {
     background-color: #e5e7eb;
+    transform: scale(1.05);
+}
+
+.action-menu-close:active {
+    transform: scale(0.96);
 }
 
 .action-menu-close:focus-visible {
@@ -141,6 +161,7 @@
     min-height: 0;
     width: 100%;
     overflow: hidden;
+    animation: app-fade-in var(--motion-slow) var(--ease-standard);
 }
 
 .fc {
@@ -177,13 +198,19 @@
     border-radius: 20px !important;
     padding: 6px 16px !important;
     transition:
-        filter 0.15s,
-        background-color 0.15s;
+        background-color var(--motion-base) var(--ease-standard),
+        filter var(--motion-base) var(--ease-standard),
+        transform var(--motion-fast) var(--ease-standard);
     box-shadow: none !important;
 }
 
-.fc-button-primary:hover {
+.fc-button-primary:not(:disabled):hover {
     filter: brightness(0.93);
+    transform: translateY(-1px);
+}
+
+.fc-button-primary:not(:disabled):active {
+    transform: translateY(0);
 }
 
 .fc-prev-button,
@@ -283,14 +310,16 @@
     border-radius: 8px !important;
     cursor: pointer;
     transition:
-        filter 0.15s,
-        transform 0.1s;
+        box-shadow var(--motion-base) var(--ease-standard),
+        filter var(--motion-base) var(--ease-standard),
+        transform var(--motion-fast) var(--ease-standard);
     padding: 4px 6px !important;
 }
 
 .fc-event:hover {
     filter: brightness(0.93);
-    transform: scale(1.01);
+    transform: translateY(-1px) scale(1.005);
+    box-shadow: 0 8px 18px rgba(17, 24, 39, 0.14);
 }
 
 .fc-event:focus,
@@ -378,10 +407,18 @@
     cursor: pointer;
     padding: 0;
     border-radius: 50%;
+    transition:
+        color var(--motion-base) var(--ease-standard),
+        opacity var(--motion-base) var(--ease-standard),
+        transform var(--motion-fast) var(--ease-standard);
 }
 
-.calendar-event-delete:hover {
-    transform: scale(1.5);
+.calendar-event-delete:not(:disabled):hover {
+    transform: scale(1.25);
+}
+
+.calendar-event-delete:not(:disabled):active {
+    transform: scale(1);
 }
 
 .calendar-event-delete:focus-visible {
@@ -432,6 +469,7 @@
     right: 60px;
 
     z-index: 900;
+    animation: app-rise-in var(--motion-slow) var(--ease-entrance);
 }
 
 .open-modal-button {
@@ -444,13 +482,20 @@
     font-weight: 700;
     cursor: pointer;
     transition:
-        filter 0.15s,
-        transform 0.2s;
+        box-shadow var(--motion-base) var(--ease-standard),
+        filter var(--motion-base) var(--ease-standard),
+        transform var(--motion-base) var(--ease-entrance);
 }
 
 .open-modal-button:hover {
     filter: brightness(0.93);
-    transform: scale(1.25);
+    transform: translateY(-2px) scale(1.08);
+    box-shadow: 0 12px 24px rgba(59, 130, 246, 0.26);
+}
+
+.open-modal-button:active {
+    transform: translateY(0) scale(1);
+    box-shadow: none;
 }
 
 .open-modal-button:focus-visible {
@@ -459,7 +504,14 @@
 
 @media (prefers-reduced-motion: reduce) {
     .fc-event:hover,
-    .open-modal-button:hover {
+    .fc-button-primary:not(:disabled):hover,
+    .fc-button-primary:not(:disabled):active,
+    .navbar-menu-button:hover,
+    .navbar-menu-button:active,
+    .calendar-event-delete:hover,
+    .calendar-event-delete:active,
+    .open-modal-button:hover,
+    .open-modal-button:active {
         transform: none;
     }
 
