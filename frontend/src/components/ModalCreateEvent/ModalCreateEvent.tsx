@@ -59,7 +59,10 @@ interface ModalCreateEventProps {
     onClose: () => void;
     onEventChange?: () => void;
     userMail: string;
-    clickedTime?: string | null;
+    initialSelection?: {
+        start: string;
+        end?: string;
+    } | null;
 }
 
 const ModalCreateEvent = ({
@@ -67,7 +70,7 @@ const ModalCreateEvent = ({
     onClose,
     onEventChange,
     userMail,
-    clickedTime,
+    initialSelection,
 }: ModalCreateEventProps) => {
     const { getApiUrl, getHeaders } = useApi();
     const { handleClose, handleBackdropClick } = useModalManager({
@@ -75,15 +78,25 @@ const ModalCreateEvent = ({
         onClose,
         onEventChange,
     });
-    const clickedTimeValue = clickedTime ? clickedTime.slice(0, 16) : '';
-    const clickedTimeParts = splitDateTimeValue(clickedTimeValue);
+    const initialStartValue = initialSelection?.start
+        ? initialSelection.start.slice(0, 16)
+        : '';
+    const initialEndValue = initialSelection?.end
+        ? initialSelection.end.slice(0, 16)
+        : '';
+    const initialStartParts = splitDateTimeValue(initialStartValue);
+    const initialEndParts = splitDateTimeValue(initialEndValue);
 
     const [errorMessage, setErrorMessage] = useState('');
     const [eventTitle, setEventTitle] = useState('');
-    const [eventStartDate, setEventStartDate] = useState(clickedTimeParts.date);
-    const [eventStartTime, setEventStartTime] = useState(clickedTimeParts.time);
-    const [eventEndDate, setEventEndDate] = useState('');
-    const [eventEndTime, setEventEndTime] = useState('');
+    const [eventStartDate, setEventStartDate] = useState(
+        initialStartParts.date
+    );
+    const [eventStartTime, setEventStartTime] = useState(
+        initialStartParts.time
+    );
+    const [eventEndDate, setEventEndDate] = useState(initialEndParts.date);
+    const [eventEndTime, setEventEndTime] = useState(initialEndParts.time);
     const [eventDescription, setEventDescription] = useState('');
     const [selectedBadge, setSelectedBadge] = useState<string>('');
     const [customBadgeLabel, setCustomBadgeLabel] = useState('');

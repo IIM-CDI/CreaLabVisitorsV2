@@ -22,6 +22,11 @@ interface CalendarLayoutProps {
 
 type ViewEventsScope = 'mine' | 'all';
 
+interface CalendarSelection {
+    start: string;
+    end?: string;
+}
+
 interface CalendarEvent {
     id: string;
     title: string;
@@ -51,7 +56,8 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
         null
     );
     const [events, setEvents] = useState<CalendarEvent[]>([]);
-    const [clickedTime, setClickedTime] = useState<string | null>(null);
+    const [calendarSelection, setCalendarSelection] =
+        useState<CalendarSelection | null>(null);
     const { getApiUrl, getHeaders } = useApi();
     const [isAdmin, setIsAdmin] = useState(false);
     const [isCompactCalendar, setIsCompactCalendar] = useState(false);
@@ -134,7 +140,14 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
         eventDisplay: 'block' as const,
         dayMaxEvents: isCompactCalendar ? 2 : true,
         dateClick: (info: any) => {
-            setClickedTime(info.dateStr);
+            setCalendarSelection({ start: info.dateStr });
+            setIsModalOpen(true);
+        },
+        select: (info: any) => {
+            setCalendarSelection({
+                start: info.startStr,
+                end: info.endStr,
+            });
             setIsModalOpen(true);
         },
         eventClick: (info: any) => {
@@ -212,6 +225,11 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
         const interval = setInterval(autoDeconnect, 600_000);
         return () => clearInterval(interval);
     }, []);
+
+    const closeCreateEventModal = () => {
+        setIsModalOpen(false);
+        setCalendarSelection(null);
+    };
 
     const isViewModalOpen = viewEventsScope !== null;
     const viewEventButtons: Array<{ scope: ViewEventsScope; text: string }> = [
@@ -413,7 +431,10 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
                         <button
                             className="open-modal-button"
                             type="button"
-                            onClick={() => setIsModalOpen(true)}
+                            onClick={() => {
+                                setCalendarSelection(null);
+                                setIsModalOpen(true);
+                            }}
                         >
                             +
                         </button>
@@ -422,9 +443,9 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
             {isModalOpen && (
                 <ModalCreateEvent
                     isOpen={isModalOpen}
-                    onClose={() => setIsModalOpen(false)}
+                    onClose={closeCreateEventModal}
                     userMail={user.email}
-                    clickedTime={clickedTime}
+                    initialSelection={calendarSelection}
                 />
             )}
             {selectedEvent && (

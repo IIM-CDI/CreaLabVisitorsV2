@@ -87,6 +87,14 @@ const ModalValidateEvent = ({
                 aria-modal="true"
                 aria-labelledby="validate-events-title"
             >
+                <button
+                    className="validate-events-close"
+                    type="button"
+                    onClick={handleClose}
+                    aria-label="Fermer la validation des événements"
+                >
+                    ×
+                </button>
                 <h2 id="validate-events-title">Valider les événements</h2>
                 {eventInfo.map(([eventId, eventTitle], index) => (
                     <div key={index} className="event-item">
