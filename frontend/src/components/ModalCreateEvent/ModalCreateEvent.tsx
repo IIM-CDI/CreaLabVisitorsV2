@@ -306,7 +306,8 @@ const ModalCreateEvent = ({
                         </div>
                         <p className="modal-info-text">
                             L'heure de début et de fin sera arrondie à un quart
-                            d'heure près.
+                            d'heure près. Le Crealab n'est pas ouvert le week
+                            end sauf JPO ou autre evenement
                         </p>
                     </div>
                     <div className="modal-badge-input-container">
@@ -359,6 +360,7 @@ const ModalCreateEvent = ({
                             component_type="primary"
                             disabled={isSubmitting}
                             aria-busy={isSubmitting}
+                            isLoading={isSubmitting}
                             text={isSubmitting ? 'Création...' : 'Créer'}
                         />
                     </div>

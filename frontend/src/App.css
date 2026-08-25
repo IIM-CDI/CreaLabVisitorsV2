@@ -6,6 +6,7 @@
     min-height: 100vh;
     min-height: 100svh;
     width: 100%;
+    animation: app-fade-in var(--motion-slow) var(--ease-standard);
 }
 
 .background {
@@ -20,4 +21,5 @@
     justify-content: center;
     align-items: center;
     filter: blur(3px);
+    animation: app-fade-in 420ms var(--ease-standard);
 }

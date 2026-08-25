@@ -13,6 +13,7 @@
 
     background-color: rgba(255, 255, 255, 0.94);
     color: var(--color-text);
+    animation: app-rise-in var(--motion-slow) var(--ease-entrance);
 }
 
 .login-layout-toggle {
@@ -39,14 +40,26 @@
     cursor: pointer;
     border-radius: 4px;
     padding: 2px 4px;
+    transition:
+        color var(--motion-base) var(--ease-standard),
+        transform var(--motion-fast) var(--ease-standard);
 }
 
 .clickable-text:hover {
     color: #084fa8;
+    transform: translateY(-1px);
 }
 
 .clickable-text:active {
     color: #063f86;
+    transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .clickable-text:hover,
+    .clickable-text:active {
+        transform: none;
+    }
 }
 
 @media (max-width: 480px) {

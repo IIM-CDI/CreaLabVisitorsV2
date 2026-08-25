@@ -26,15 +26,18 @@
     color: var(--color-text);
     background-color: #ffffff;
     transition:
-        border-color 0.15s ease,
-        box-shadow 0.15s ease;
+        background-color var(--motion-base) var(--ease-standard),
+        border-color var(--motion-base) var(--ease-standard),
+        box-shadow var(--motion-base) var(--ease-standard);
 }
 
 .text-input-field:hover {
+    background-color: #f9fafb;
     border-color: #6b7280;
 }
 
 .text-input-field:focus-visible {
+    background-color: #ffffff;
     border-color: #0b63ce;
 }
 

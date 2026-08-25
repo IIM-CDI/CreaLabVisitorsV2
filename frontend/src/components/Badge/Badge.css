@@ -13,16 +13,20 @@
     overflow-wrap: anywhere;
     cursor: pointer;
     transition:
-        border-color 0.15s ease,
-        background-color 0.15s ease,
-        box-shadow 0.15s ease,
-        filter 0.15s ease,
-        transform 0.1s ease;
+        border-color var(--motion-base) var(--ease-standard),
+        background-color var(--motion-base) var(--ease-standard),
+        box-shadow var(--motion-base) var(--ease-standard),
+        filter var(--motion-base) var(--ease-standard),
+        transform var(--motion-fast) var(--ease-standard);
 }
 
 .badge:hover {
     border-color: #111827;
     filter: brightness(0.97);
+}
+
+.badge:not(.badge-editable):hover {
+    transform: translateY(-1px);
 }
 
 .badge.selected {
@@ -85,6 +89,9 @@
     height: 16px;
     flex: 0 0 16px;
     fill: currentColor;
+    transition:
+        background-color var(--motion-base) var(--ease-standard),
+        transform var(--motion-fast) var(--ease-standard);
 }
 
 .badge-editable {
@@ -104,6 +111,10 @@
     outline: none;
     border-color: #581c87;
     box-shadow: 0 0 0 3px rgba(107, 33, 168, 0.18);
+}
+
+.badge-editable:focus-within .badge-edit-icon {
+    transform: scale(1.04);
 }
 
 .badge-editable .badge-edit-icon {
@@ -151,5 +162,13 @@
 @media (max-width: 480px) {
     .badge-custom {
         grid-column: 1 / -1;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .badge:not(.badge-editable):hover,
+    .badge:active,
+    .badge-editable:focus-within .badge-edit-icon {
+        transform: none;
     }
 }

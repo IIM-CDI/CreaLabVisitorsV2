@@ -8,6 +8,7 @@
     z-index: 1000;
     padding: 16px;
     overflow-y: auto;
+    animation: app-fade-in var(--motion-base) var(--ease-standard);
 }
 
 .modal-content-view-event {
@@ -24,6 +25,7 @@
     border-radius: 8px;
     box-shadow: 0 16px 40px rgba(0, 0, 0, 0.22);
     padding: 22px;
+    animation: app-rise-in var(--motion-slow) var(--ease-entrance);
 }
 
 .view-events-header {
@@ -60,10 +62,18 @@
     cursor: pointer;
     font-size: 1.5rem;
     line-height: 1;
+    transition:
+        background-color var(--motion-base) var(--ease-standard),
+        transform var(--motion-fast) var(--ease-standard);
 }
 
 .view-events-close:hover {
     background-color: #e5e7eb;
+    transform: scale(1.05);
+}
+
+.view-events-close:active {
+    transform: scale(0.96);
 }
 
 .view-events-close:focus-visible {
@@ -77,6 +87,7 @@
     color: var(--color-muted);
     text-align: center;
     font-weight: 700;
+    animation: app-rise-in var(--motion-base) var(--ease-entrance);
 }
 
 .view-events-list {
@@ -95,6 +106,17 @@
     border: 1px solid #d1d5db;
     border-radius: 8px;
     background-color: #ffffff;
+    animation: app-rise-in var(--motion-base) var(--ease-entrance);
+    transition:
+        border-color var(--motion-base) var(--ease-standard),
+        box-shadow var(--motion-base) var(--ease-standard),
+        transform var(--motion-fast) var(--ease-standard);
+}
+
+.view-event-item:hover {
+    border-color: #9ca3af;
+    box-shadow: 0 8px 20px rgba(17, 24, 39, 0.08);
+    transform: translateY(-1px);
 }
 
 .view-event-item-header {
@@ -224,5 +246,13 @@
 
     .view-event-item-actions .button {
         width: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .view-events-close:hover,
+    .view-events-close:active,
+    .view-event-item:hover {
+        transform: none;
     }
 }

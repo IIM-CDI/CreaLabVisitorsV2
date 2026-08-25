@@ -135,6 +135,7 @@ const ModalEventDetails = ({
                                 }
                                 onClick={onDelete}
                                 disabled={isDeleting}
+                                isLoading={isDeleting}
                             />
                         )}
                         <Button

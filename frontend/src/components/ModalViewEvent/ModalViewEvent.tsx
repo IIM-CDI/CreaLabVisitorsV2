@@ -209,6 +209,7 @@ const ModalViewEvent = ({
                                                     onDeleteEvent(event)
                                                 }
                                                 disabled={isDeleting}
+                                                isLoading={isDeleting}
                                             />
                                         </div>
                                     )}
