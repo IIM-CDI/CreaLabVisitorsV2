@@ -130,7 +130,9 @@ const ModalEventDetails = ({
                             <Button
                                 component_type="danger"
                                 type="button"
-                                text={isDeleting ? 'Suppression...' : 'Supprimer'}
+                                text={
+                                    isDeleting ? 'Suppression...' : 'Supprimer'
+                                }
                                 onClick={onDelete}
                                 disabled={isDeleting}
                             />

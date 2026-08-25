@@ -184,7 +184,9 @@ const ModalViewEvent = ({
                                         </div>
                                         <div>
                                             <dt>Fin</dt>
-                                            <dd>{formatEventDate(event.end)}</dd>
+                                            <dd>
+                                                {formatEventDate(event.end)}
+                                            </dd>
                                         </div>
                                     </dl>
 

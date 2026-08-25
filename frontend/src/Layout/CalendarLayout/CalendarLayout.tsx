@@ -222,7 +222,8 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
     ];
     const canDeleteEvent = useCallback(
         (event: Pick<CalendarEvent, 'userMail'>) =>
-            isAdmin || normalizeEmail(event.userMail) === normalizeEmail(user.email),
+            isAdmin ||
+            normalizeEmail(event.userMail) === normalizeEmail(user.email),
         [isAdmin, user.email]
     );
 
