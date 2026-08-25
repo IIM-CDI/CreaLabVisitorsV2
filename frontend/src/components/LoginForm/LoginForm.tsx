@@ -47,7 +47,10 @@ const LoginForm = () => {
                 );
             }
 
-            localStorage.setItem('user', JSON.stringify(data.user || { email }));
+            localStorage.setItem(
+                'user',
+                JSON.stringify(data.user || { email })
+            );
             localStorage.setItem('mail', email);
             setEmail('');
             setPassword('');
