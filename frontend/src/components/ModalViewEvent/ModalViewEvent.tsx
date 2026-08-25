@@ -50,10 +50,7 @@ const formatEventDate = (date: Date | string | null) => {
 };
 
 const getUserKey = (value: string) =>
-    value
-        .split('@')[0]
-        .replace(/[.\s]/g, '')
-        .toLowerCase();
+    value.split('@')[0].replace(/[.\s]/g, '').toLowerCase();
 
 const ModalViewEvent = ({
     isOpen,
