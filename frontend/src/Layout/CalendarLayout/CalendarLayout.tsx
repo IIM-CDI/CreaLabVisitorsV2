@@ -20,10 +20,13 @@ interface CalendarLayoutProps {
     user: { email: string };
 }
 
+type ViewEventsScope = 'mine' | 'all';
+
 const CalendarLayout = ({ user }: CalendarLayoutProps) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isValidateModalOpen, setIsValidateModalOpen] = useState(false);
-    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+    const [viewEventsScope, setViewEventsScope] =
+        useState<ViewEventsScope | null>(null);
     const [selectedEvent, setSelectedEvent] = useState<EventDetails | null>(
         null
     );
@@ -187,19 +190,30 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
         return () => clearInterval(interval);
     }, []);
 
+    const isViewModalOpen = viewEventsScope !== null;
+    const viewEventButtons: Array<{ scope: ViewEventsScope; text: string }> = [
+        { scope: 'mine', text: 'Mes événements' },
+        ...(isAdmin
+            ? [{ scope: 'all' as const, text: 'Tous les événements' }]
+            : []),
+    ];
+
     return (
         <div className="calendar-layout">
             <div className="navbar">
                 <div className="open-modal-create-event-button-container">
-                    <Button
-                        className="navbar-event-button"
-                        component_type="secondary"
-                        type="button"
-                        text="Mes événements"
-                        onClick={() => setIsViewModalOpen(true)}
-                        aria-haspopup="dialog"
-                        aria-expanded={isViewModalOpen}
-                    />
+                    {viewEventButtons.map(({ scope, text }) => (
+                        <Button
+                            key={scope}
+                            className="navbar-event-button"
+                            component_type="secondary"
+                            type="button"
+                            text={text}
+                            onClick={() => setViewEventsScope(scope)}
+                            aria-haspopup="dialog"
+                            aria-expanded={viewEventsScope === scope}
+                        />
+                    ))}
                     {isAdmin && (
                         <Button
                             className="navbar-event-button"
@@ -220,12 +234,13 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
                     text="Déconnexion"
                 />
             </div>
-            {isViewModalOpen && (
+            {viewEventsScope && (
                 <ModalViewEvent
-                    isOpen={isViewModalOpen}
-                    onClose={() => setIsViewModalOpen(false)}
+                    isOpen={true}
+                    onClose={() => setViewEventsScope(null)}
                     events={events}
                     userMail={user.email}
+                    scope={viewEventsScope}
                 />
             )}
             {isValidateModalOpen && (

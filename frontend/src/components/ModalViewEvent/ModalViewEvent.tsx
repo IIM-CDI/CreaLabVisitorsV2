@@ -14,11 +14,14 @@ interface ViewEvent {
     accepted?: boolean;
 }
 
+type ViewEventScope = 'mine' | 'all';
+
 interface ModalViewEventProps {
     isOpen: boolean;
     onClose: () => void;
     events: ViewEvent[];
     userMail: string;
+    scope: ViewEventScope;
 }
 
 const getEventTime = (date: Date | string | null) => {
@@ -46,34 +49,41 @@ const formatEventDate = (date: Date | string | null) => {
     }).format(new Date(time));
 };
 
+const getUserKey = (value: string) =>
+    value
+        .split('@')[0]
+        .replace(/[.\s]/g, '')
+        .toLowerCase();
+
 const ModalViewEvent = ({
     isOpen,
     onClose,
     events,
     userMail,
+    scope,
 }: ModalViewEventProps) => {
     const { handleClose, handleBackdropClick } = useModalManager({
         isOpen,
         onClose,
     });
 
+    const isAllEventsView = scope === 'all';
+    const title = isAllEventsView
+        ? 'Tous les événements à venir'
+        : 'Mes événements à venir';
+
     const upcomingEvents = useMemo(() => {
         const now = Date.now();
-        const normalizedUserName = userMail
-            .split('@')[0]
-            .split('.')
-            .join('')
-            .toLowerCase();
+        const userKey = getUserKey(userMail);
 
         return events
             .filter((event) => {
                 const startTime = getEventTime(event.start);
 
+                if (startTime === null || startTime < now) return false;
+
                 return (
-                    event.user?.split(' ').join('').toLowerCase() ===
-                        normalizedUserName &&
-                    startTime !== null &&
-                    startTime >= now
+                    isAllEventsView || getUserKey(event.user ?? '') === userKey
                 );
             })
             .sort((eventA, eventB) => {
@@ -82,7 +92,7 @@ const ModalViewEvent = ({
 
                 return startA - startB;
             });
-    }, [events, userMail]);
+    }, [events, isAllEventsView, userMail]);
 
     if (!isOpen) return null;
 
@@ -99,7 +109,7 @@ const ModalViewEvent = ({
             >
                 <header className="view-events-header">
                     <div>
-                        <h2 id="view-events-title">Mes événements à venir</h2>
+                        <h2 id="view-events-title">{title}</h2>
                         <p>
                             {upcomingEvents.length}{' '}
                             {upcomingEvents.length > 1
@@ -111,7 +121,7 @@ const ModalViewEvent = ({
                         className="view-events-close"
                         type="button"
                         onClick={handleClose}
-                        aria-label="Fermer mes événements"
+                        aria-label="Fermer la liste des événements"
                     >
                         ×
                     </button>
@@ -147,6 +157,12 @@ const ModalViewEvent = ({
                                 )}
 
                                 <dl className="view-event-details">
+                                    {isAllEventsView && event.user && (
+                                        <div>
+                                            <dt>Créateur</dt>
+                                            <dd>{event.user}</dd>
+                                        </div>
+                                    )}
                                     <div>
                                         <dt>Début</dt>
                                         <dd>{formatEventDate(event.start)}</dd>
