@@ -7,6 +7,8 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 from email_templates import (
+    event_deleted_admin_template,
+    event_deleted_user_template,
     event_rejected_admin_template,
     event_rejected_user_template,
     event_validated_admin_template,
@@ -134,3 +136,12 @@ def send_rejection_email(admin_email: str | None, recipient: str, response: APIR
 
     send_email(recipient, user_subject, user_body)
     send_email(admin_email, admin_subject, admin_body)
+
+
+def send_deletion_email(admin_email: str | None, recipient: str, response: APIResponse, attachments: list[str] | None = None):
+    event = _event_from_response(response)
+    user_subject, user_body = event_deleted_user_template(event)
+    admin_subject, admin_body = event_deleted_admin_template(event)
+
+    send_email(recipient, user_subject, user_body, attachments=attachments)
+    send_email(admin_email, admin_subject, admin_body, attachments=attachments)

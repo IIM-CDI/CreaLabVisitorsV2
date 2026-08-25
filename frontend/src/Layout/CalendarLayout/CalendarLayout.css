@@ -265,7 +265,7 @@
     height: 100%;
     width: 100%;
     box-sizing: border-box;
-    padding-right: 14px;
+    padding-right: 22px;
     overflow: hidden;
 }
 
@@ -278,14 +278,15 @@
 
 .calendar-event-delete {
     position: absolute;
-    top: -7px;
+    top: -5px;
     right: -5px;
     width: 24px;
     height: 24px;
     border: none;
-    background: transparent;
-    color: #1a1a1a;
+    background-color: transparent;
+    color: #111827;
     font-size: 20px;
+    font-weight: 800;
     line-height: 1;
     cursor: pointer;
     padding: 0;
@@ -293,12 +294,16 @@
 }
 
 .calendar-event-delete:hover {
-    background-color: rgba(255, 255, 255, 0.75);
-    opacity: 0.9;
+    transform: scale(1.5);
 }
 
 .calendar-event-delete:focus-visible {
     outline-offset: 1px;
+}
+
+.calendar-event-delete:disabled {
+    cursor: not-allowed;
+    opacity: 0.4;
 }
 
 .fc-event-dragging {
