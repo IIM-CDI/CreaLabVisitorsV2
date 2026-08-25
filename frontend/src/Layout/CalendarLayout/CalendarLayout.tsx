@@ -22,6 +22,26 @@ interface CalendarLayoutProps {
 
 type ViewEventsScope = 'mine' | 'all';
 
+interface CalendarEvent {
+    id: string;
+    title: string;
+    description?: string;
+    badge?: string;
+    user?: string;
+    userMail?: string;
+    start: string;
+    end: string;
+    accepted?: boolean;
+    backgroundColor: string;
+    borderColor: string;
+    textColor: string;
+    timezone: string;
+}
+
+type DeletableEvent = Pick<CalendarEvent, 'id' | 'title' | 'userMail'>;
+
+const normalizeEmail = (email?: string) => (email ?? '').trim().toLowerCase();
+
 const CalendarLayout = ({ user }: CalendarLayoutProps) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isValidateModalOpen, setIsValidateModalOpen] = useState(false);
@@ -30,11 +50,12 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
     const [selectedEvent, setSelectedEvent] = useState<EventDetails | null>(
         null
     );
-    const [events, setEvents] = useState<any[]>([]);
+    const [events, setEvents] = useState<CalendarEvent[]>([]);
     const [clickedTime, setClickedTime] = useState<string | null>(null);
     const { getApiUrl, getHeaders } = useApi();
     const [isAdmin, setIsAdmin] = useState(false);
     const [isCompactCalendar, setIsCompactCalendar] = useState(false);
+    const [deletingEventId, setDeletingEventId] = useState<string | null>(null);
 
     const checkAdminStatus = useCallback(async () => {
         const response = await fetch(`${getApiUrl()}/user/${user.email}`, {
@@ -125,6 +146,7 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
                 badge: event.extendedProps.badge,
                 description: event.extendedProps.description,
                 user: event.extendedProps.user,
+                userMail: event.extendedProps.userMail,
                 start: event.start,
                 end: event.end,
                 backgroundColor: event.backgroundColor || '#c4c4c4',
@@ -149,13 +171,14 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
         const data = await response.json();
 
         const events = data.events.map((event: any) => ({
-            id: event.id,
+            id: String(event.id),
             title: event.title,
             description: event.description,
             badge: event.badge,
             user: event.user,
-            start: event.startStr,
-            end: event.endStr,
+            userMail: event.user_mail,
+            start: event.startStr || event.start || '',
+            end: event.endStr || event.end || '',
             accepted: event.accepted,
             backgroundColor: event.accepted ? event.color : '#c4c4c4',
             borderColor: event.accepted ? event.color : '#c4c4c4',
@@ -197,6 +220,79 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
             ? [{ scope: 'all' as const, text: 'Tous les événements' }]
             : []),
     ];
+    const canDeleteEvent = useCallback(
+        (event: Pick<CalendarEvent, 'userMail'>) =>
+            isAdmin || normalizeEmail(event.userMail) === normalizeEmail(user.email),
+        [isAdmin, user.email]
+    );
+
+    const handleDeleteEvent = useCallback(
+        async (eventToDelete: DeletableEvent) => {
+            if (deletingEventId) return;
+
+            if (!canDeleteEvent(eventToDelete)) {
+                window.alert(
+                    'Vous ne pouvez supprimer que vos propres événements.'
+                );
+                return;
+            }
+
+            const confirmed = window.confirm(
+                `Supprimer "${eventToDelete.title}" ? Un mail d'annulation avec un fichier ICS sera envoyé.`
+            );
+
+            if (!confirmed) return;
+
+            setDeletingEventId(eventToDelete.id);
+
+            try {
+                const query = new URLSearchParams({
+                    requester_email: user.email,
+                });
+                const response = await fetch(
+                    `${getApiUrl()}/event/${eventToDelete.id}?${query}`,
+                    {
+                        method: 'DELETE',
+                        headers: getHeaders(),
+                    }
+                );
+
+                if (!response.ok) {
+                    let message = "La suppression de l'événement a échoué.";
+
+                    try {
+                        const data = await response.json();
+                        message = data.detail || message;
+                    } catch {
+                        // Keep the generic message when the backend returns no JSON.
+                    }
+
+                    window.alert(message);
+                    return;
+                }
+
+                setEvents((currentEvents) =>
+                    currentEvents.filter(
+                        (event) => event.id !== eventToDelete.id
+                    )
+                );
+                setSelectedEvent((currentEvent) =>
+                    currentEvent?.id === eventToDelete.id ? null : currentEvent
+                );
+                await fetchEvents();
+            } finally {
+                setDeletingEventId(null);
+            }
+        },
+        [
+            canDeleteEvent,
+            deletingEventId,
+            fetchEvents,
+            getApiUrl,
+            getHeaders,
+            user.email,
+        ]
+    );
 
     return (
         <div className="calendar-layout">
@@ -241,6 +337,9 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
                     events={events}
                     userMail={user.email}
                     scope={viewEventsScope}
+                    canDeleteEvent={canDeleteEvent}
+                    onDeleteEvent={handleDeleteEvent}
+                    deletingEventId={deletingEventId}
                 />
             )}
             {isValidateModalOpen && (
@@ -266,16 +365,42 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
                     ]}
                     {...calendarConfig}
                     events={events}
-                    eventContent={(arg) => (
-                        <div className="fc-event-content">
-                            <div className="fc-event-title">
-                                {arg.event.title}
+                    eventContent={(arg) => {
+                        const eventToDelete = {
+                            id: arg.event.id,
+                            title: arg.event.title,
+                            userMail: arg.event.extendedProps.userMail,
+                        };
+                        const isDeleting = deletingEventId === arg.event.id;
+
+                        return (
+                            <div className="calendar-event-content">
+                                <div className="calendar-event-text">
+                                    <div className="fc-event-title">
+                                        {arg.event.title}
+                                    </div>
+                                    <div className="fc-event-badge">
+                                        {arg.event.extendedProps.badge}
+                                    </div>
+                                </div>
+                                {canDeleteEvent(eventToDelete) && (
+                                    <button
+                                        className="calendar-event-delete"
+                                        type="button"
+                                        onClick={(event) => {
+                                            event.preventDefault();
+                                            event.stopPropagation();
+                                            handleDeleteEvent(eventToDelete);
+                                        }}
+                                        disabled={isDeleting}
+                                        aria-label={`Supprimer l'événement ${arg.event.title}`}
+                                    >
+                                        ×
+                                    </button>
+                                )}
                             </div>
-                            <div className="fc-event-badge">
-                                {arg.event.extendedProps.badge}
-                            </div>
-                        </div>
-                    )}
+                        );
+                    }}
                 />
             </div>
 
@@ -306,6 +431,9 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
                     isOpen={selectedEvent !== null}
                     onClose={() => setSelectedEvent(null)}
                     event={selectedEvent}
+                    canDelete={canDeleteEvent(selectedEvent)}
+                    onDelete={() => handleDeleteEvent(selectedEvent)}
+                    isDeleting={deletingEventId === selectedEvent.id}
                 />
             )}
         </div>

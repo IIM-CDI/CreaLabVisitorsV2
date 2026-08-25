@@ -173,6 +173,16 @@
     overflow-wrap: anywhere;
 }
 
+.view-event-item-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.view-event-item-actions .button {
+    width: auto;
+    min-width: 120px;
+}
+
 .view-events-actions {
     display: flex;
     justify-content: flex-end;
@@ -209,6 +219,10 @@
     }
 
     .view-events-actions .button {
+        width: 100%;
+    }
+
+    .view-event-item-actions .button {
         width: 100%;
     }
 }

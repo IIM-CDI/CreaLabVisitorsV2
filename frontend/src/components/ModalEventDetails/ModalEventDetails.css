@@ -142,6 +142,13 @@
 .event-details-actions {
     display: flex;
     justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.event-details-actions .button {
+    width: auto;
+    min-width: 120px;
 }
 
 @media (max-width: 480px) {
@@ -159,5 +166,9 @@
     .event-details-row {
         grid-template-columns: 1fr;
         gap: 4px;
+    }
+
+    .event-details-actions .button {
+        width: 100%;
     }
 }

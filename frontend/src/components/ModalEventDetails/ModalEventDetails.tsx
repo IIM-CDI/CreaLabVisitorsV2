@@ -9,6 +9,7 @@ export interface EventDetails {
     badge?: string;
     description?: string;
     user?: string;
+    userMail?: string;
     start: Date | null;
     end: Date | null;
     backgroundColor: string;
@@ -20,6 +21,9 @@ interface ModalEventDetailsProps {
     isOpen: boolean;
     onClose: () => void;
     event: EventDetails | null;
+    canDelete: boolean;
+    onDelete: () => void;
+    isDeleting: boolean;
 }
 
 const formatEventDate = (date: Date | null) => {
@@ -40,6 +44,9 @@ const ModalEventDetails = ({
     isOpen,
     onClose,
     event,
+    canDelete,
+    onDelete,
+    isDeleting,
 }: ModalEventDetailsProps) => {
     const { handleClose, handleBackdropClick } = useModalManager({
         isOpen,
@@ -119,6 +126,15 @@ const ModalEventDetails = ({
                     </dl>
 
                     <div className="event-details-actions">
+                        {canDelete && (
+                            <Button
+                                component_type="danger"
+                                type="button"
+                                text={isDeleting ? 'Suppression...' : 'Supprimer'}
+                                onClick={onDelete}
+                                disabled={isDeleting}
+                            />
+                        )}
                         <Button
                             component_type="secondary"
                             type="button"

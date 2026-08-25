@@ -9,6 +9,7 @@ interface ViewEvent {
     badge?: string;
     description?: string;
     user?: string;
+    userMail?: string;
     start: Date | string | null;
     end: Date | string | null;
     accepted?: boolean;
@@ -22,6 +23,9 @@ interface ModalViewEventProps {
     events: ViewEvent[];
     userMail: string;
     scope: ViewEventScope;
+    canDeleteEvent: (event: ViewEvent) => boolean;
+    onDeleteEvent: (event: ViewEvent) => void;
+    deletingEventId: string | null;
 }
 
 const getEventTime = (date: Date | string | null) => {
@@ -52,12 +56,17 @@ const formatEventDate = (date: Date | string | null) => {
 const getUserKey = (value: string) =>
     value.split('@')[0].replace(/[.\s]/g, '').toLowerCase();
 
+const normalizeEmail = (email?: string) => (email ?? '').trim().toLowerCase();
+
 const ModalViewEvent = ({
     isOpen,
     onClose,
     events,
     userMail,
     scope,
+    canDeleteEvent,
+    onDeleteEvent,
+    deletingEventId,
 }: ModalViewEventProps) => {
     const { handleClose, handleBackdropClick } = useModalManager({
         isOpen,
@@ -72,6 +81,7 @@ const ModalViewEvent = ({
     const upcomingEvents = useMemo(() => {
         const now = Date.now();
         const userKey = getUserKey(userMail);
+        const normalizedUserMail = normalizeEmail(userMail);
 
         return events
             .filter((event) => {
@@ -79,9 +89,12 @@ const ModalViewEvent = ({
 
                 if (startTime === null || startTime < now) return false;
 
-                return (
-                    isAllEventsView || getUserKey(event.user ?? '') === userKey
-                );
+                const belongsToUser =
+                    normalizeEmail(event.userMail) === normalizedUserMail ||
+                    (!event.userMail &&
+                        getUserKey(event.user ?? '') === userKey);
+
+                return isAllEventsView || belongsToUser;
             })
             .sort((eventA, eventB) => {
                 const startA = getEventTime(eventA.start) ?? 0;
@@ -130,51 +143,76 @@ const ModalViewEvent = ({
                     </p>
                 ) : (
                     <ul className="view-events-list">
-                        {upcomingEvents.map((event) => (
-                            <li key={event.id} className="view-event-item">
-                                <div className="view-event-item-header">
-                                    <h3>{event.title}</h3>
-                                    <span
-                                        className={
-                                            event.accepted === false
-                                                ? 'view-event-status view-event-status-pending'
-                                                : 'view-event-status view-event-status-accepted'
-                                        }
-                                    >
-                                        {event.accepted === false
-                                            ? 'En attente'
-                                            : 'Validé'}
-                                    </span>
-                                </div>
+                        {upcomingEvents.map((event) => {
+                            const isDeleting = deletingEventId === event.id;
 
-                                {event.badge && (
-                                    <span className="view-event-badge">
-                                        {event.badge}
-                                    </span>
-                                )}
+                            return (
+                                <li key={event.id} className="view-event-item">
+                                    <div className="view-event-item-header">
+                                        <h3>{event.title}</h3>
+                                        <span
+                                            className={
+                                                event.accepted === false
+                                                    ? 'view-event-status view-event-status-pending'
+                                                    : 'view-event-status view-event-status-accepted'
+                                            }
+                                        >
+                                            {event.accepted === false
+                                                ? 'En attente'
+                                                : 'Validé'}
+                                        </span>
+                                    </div>
 
-                                <dl className="view-event-details">
-                                    {isAllEventsView && event.user && (
+                                    {event.badge && (
+                                        <span className="view-event-badge">
+                                            {event.badge}
+                                        </span>
+                                    )}
+
+                                    <dl className="view-event-details">
+                                        {isAllEventsView && event.user && (
+                                            <div>
+                                                <dt>Créateur</dt>
+                                                <dd>{event.user}</dd>
+                                            </div>
+                                        )}
                                         <div>
-                                            <dt>Créateur</dt>
-                                            <dd>{event.user}</dd>
+                                            <dt>Début</dt>
+                                            <dd>
+                                                {formatEventDate(event.start)}
+                                            </dd>
+                                        </div>
+                                        <div>
+                                            <dt>Fin</dt>
+                                            <dd>{formatEventDate(event.end)}</dd>
+                                        </div>
+                                    </dl>
+
+                                    <p className="view-event-description">
+                                        {event.description ||
+                                            'Sans description'}
+                                    </p>
+
+                                    {canDeleteEvent(event) && (
+                                        <div className="view-event-item-actions">
+                                            <Button
+                                                component_type="danger"
+                                                type="button"
+                                                text={
+                                                    isDeleting
+                                                        ? 'Suppression...'
+                                                        : 'Supprimer'
+                                                }
+                                                onClick={() =>
+                                                    onDeleteEvent(event)
+                                                }
+                                                disabled={isDeleting}
+                                            />
                                         </div>
                                     )}
-                                    <div>
-                                        <dt>Début</dt>
-                                        <dd>{formatEventDate(event.start)}</dd>
-                                    </div>
-                                    <div>
-                                        <dt>Fin</dt>
-                                        <dd>{formatEventDate(event.end)}</dd>
-                                    </div>
-                                </dl>
-
-                                <p className="view-event-description">
-                                    {event.description || 'Sans description'}
-                                </p>
-                            </li>
-                        ))}
+                                </li>
+                            );
+                        })}
                     </ul>
                 )}
 
