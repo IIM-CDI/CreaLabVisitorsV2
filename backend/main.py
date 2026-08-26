@@ -1,6 +1,6 @@
-from datetime import timedelta
 import os
 import re
+from datetime import timedelta
 from html import escape
 
 import bcrypt
@@ -15,7 +15,12 @@ from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from generationICS import creer_invitation_ics
-from mailing import send_new_event_email, send_rejection_email, send_validation_email
+from mailing import (
+    send_deletion_email,
+    send_new_event_email,
+    send_rejection_email,
+    send_validation_email,
+)
 from pydantic import BaseModel
 from supabase import create_client
 
@@ -64,7 +69,7 @@ class PasswordUpdateRequest(BaseModel):
 
 class EventCreateRequest(BaseModel):
     title: str
-    description: str
+    description: str | None = None
     user_mail: str
     start: str
     end: str
@@ -106,7 +111,9 @@ def ensure_text(value: str, field_name: str) -> str:
 
 
 def get_admin_email() -> str | None:
-    return os.getenv("SMTP_SENDER")
+    return (
+        os.getenv("SMTP_SENDER")
+    )
 
 
 def build_event_action_url(request: Request, action: str, event_id: int) -> str:
@@ -151,16 +158,91 @@ def is_event_accepted(event: dict) -> bool:
     return event.get("accepted") is True or str(event.get("accepted")).lower() == "true"
 
 
-def create_event_ics(event_id: int, event: dict) -> str:
+def is_admin_user(user: dict) -> bool:
+    return user.get("admin") is True or str(user.get("admin")).lower() == "true"
+
+
+def unique_emails(*emails: str | None) -> list[str]:
+    recipients = []
+    for email in emails:
+        if not email:
+            continue
+        normalized_email = normalize_email(email)
+        if normalized_email not in recipients:
+            recipients.append(normalized_email)
+    return recipients
+
+
+def get_event_ics_path(event_id: int, suffix: str = "") -> str:
+    return os.path.join("/tmp", f"crealab-event-{event_id}{suffix}.ics")
+
+
+def get_existing_event_ics_uid(event_id: int) -> str | None:
+    try:
+        with open(get_event_ics_path(event_id), encoding="utf-8") as ics_file:
+            for line in ics_file:
+                if line.startswith("UID:"):
+                    return line.removeprefix("UID:").strip()
+    except OSError:
+        return None
+
+    return None
+
+
+def get_event_ics_uid(event_id: int) -> str:
+    return f"crealab-event-{event_id}@crealab-visitors"
+
+
+def create_event_ics(event_id: int, event: dict, method: str = "REQUEST") -> str:
+    method = method.upper()
+    is_cancellation = method == "CANCEL"
+    suffix = "-cancel" if is_cancellation else ""
+    uid = (
+        get_existing_event_ics_uid(event_id)
+        if is_cancellation and is_event_accepted(event)
+        else None
+    )
+
     return creer_invitation_ics(
         sujet=event["title"],
         debut=get_event_datetime(event, "start"),
         fin=get_event_datetime(event, "end"),
         organisateur=event["user_mail"],
-        participants=[event["user_mail"]],
-        description=event["description"],
+        participants=unique_emails(event["user_mail"], get_admin_email()),
+        description=event.get("description") or "",
         lieu="CreaLab",
-        fichier=os.path.join("/tmp", f"crealab-event-{event_id}.ics"),
+        uid=uid or get_event_ics_uid(event_id),
+        sequence=1 if is_cancellation else 0,
+        method=method,
+        fichier=get_event_ics_path(event_id, suffix),
+    )
+
+
+def get_requester_or_404(requester_email: str) -> dict:
+    normalized_email = normalize_email(ensure_text(requester_email, "Requester email"))
+    if not verify_email(normalized_email):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Adresse email invalide")
+
+    response = supabase.table("CreaLab_visitors").select("*").eq("email", normalized_email).execute()
+    if not response.data:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Utilisateur non trouvé")
+
+    requester = dict(response.data[0])
+    requester["email"] = normalized_email
+    return requester
+
+
+def ensure_event_deletion_allowed(event: dict, requester_email: str):
+    requester = get_requester_or_404(requester_email)
+    if is_admin_user(requester):
+        return
+
+    if normalize_email(event.get("user_mail", "")) == requester["email"]:
+        return
+
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Vous ne pouvez supprimer que vos propres événements",
     )
 
 
@@ -200,6 +282,24 @@ def reject_event_and_notify(event_id: int):
         admin_email=get_admin_email(),
         recipient=response.data[0]["user_mail"],
         response=response,
+    )
+    return response
+
+
+def delete_event_and_notify(event_id: int, requester_email: str):
+    response = get_event_response_or_404(event_id)
+    event = response.data[0]
+    ensure_event_deletion_allowed(event, requester_email)
+
+    ics_path = create_event_ics(event_id, event, method="CANCEL")
+    supabase.table("CreaLab_events").delete().eq("id", event_id).execute()
+    notify_admin_or_log(
+        "Deletion notification",
+        send_deletion_email,
+        admin_email=get_admin_email(),
+        recipient=event["user_mail"],
+        response=response,
+        attachments=[ics_path],
     )
     return response
 
@@ -279,7 +379,7 @@ async def delete_user(email: str):
 @app.post("/event/")
 async def create_event(payload: EventCreateRequest, request: Request):
     title = ensure_text(payload.title, "Title")
-    description = ensure_text(payload.description, "Description")
+    description = (payload.description or "").strip()
     user_mail = normalize_email(ensure_text(payload.user_mail, "User mail"))
     start = ensure_text(payload.start, "Start")
     end = ensure_text(payload.end, "End")
@@ -333,6 +433,12 @@ async def get_events():
 @app.delete("/event/reject/{event_id}")
 async def delete_event(event_id: int):
     reject_event_and_notify(event_id)
+    return {"message": "Event deleted"}
+
+
+@app.delete("/event/{event_id}")
+async def delete_existing_event(event_id: int, requester_email: str):
+    delete_event_and_notify(event_id, requester_email)
     return {"message": "Event deleted"}
 
 

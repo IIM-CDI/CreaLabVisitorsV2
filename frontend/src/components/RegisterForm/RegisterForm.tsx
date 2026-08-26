@@ -11,9 +11,12 @@ const RegisterForm = () => {
     const [confirmPassword, setConfirmPassword] = useState('');
 
     const [errorMessage, setErrorMessage] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+
+        if (isSubmitting) return;
 
         if (
             'devinci.fr' !== email.split('@')[1] &&
@@ -30,6 +33,9 @@ const RegisterForm = () => {
             return;
         }
 
+        setErrorMessage('');
+        setIsSubmitting(true);
+
         try {
             const response = await fetch(`${getApiUrl()}/user/`, {
                 method: 'POST',
@@ -45,6 +51,7 @@ const RegisterForm = () => {
                         data.message ||
                         "Erreur lors de l'inscription."
                 );
+                setIsSubmitting(false);
                 return;
             }
 
@@ -63,6 +70,7 @@ const RegisterForm = () => {
                     ? error.message
                     : "Erreur lors de l'inscription."
             );
+            setIsSubmitting(false);
         }
     };
 
@@ -97,7 +105,10 @@ const RegisterForm = () => {
                 <Button
                     type="submit"
                     component_type="primary"
-                    text="S'inscrire"
+                    text={isSubmitting ? 'Inscription...' : "S'inscrire"}
+                    disabled={isSubmitting}
+                    aria-busy={isSubmitting}
+                    isLoading={isSubmitting}
                 />
             </form>
 

@@ -228,3 +228,41 @@ def event_rejected_admin_template(event: dict) -> tuple[str, str]:
         content,
         DANGER_COLOR,
     )
+
+
+def event_deleted_user_template(event: dict) -> tuple[str, str]:
+    subject = f"Événement supprimé - {_plain(event.get('title'))}"
+    content = f"""
+        <p>Bonjour {_safe(event.get('user'))},</p>
+        <p>L'événement <strong>{_safe(event.get('title'))}</strong> a été supprimé du calendrier du {BRAND_NAME}.</p>
+        <p>Vous pouvez contacter l'équipe du {BRAND_NAME} si vous souhaitez plus d'informations.</p>
+        <div style="margin: 18px 0; padding: 14px 16px; border-left: 4px solid {DANGER_COLOR}; background: #fff1f0; border-radius: 6px; color: #8a1f17;">
+            Le fichier ICS joint permet de retirer cet événement de votre agenda.
+        </div>
+        {_details_table(event)}
+        <p>Cordialement,<br>L'équipe {BRAND_NAME}</p>
+    """
+    return subject, _layout(
+        "Événement supprimé",
+        "L'événement a été retiré du calendrier.",
+        content,
+        DANGER_COLOR,
+    )
+
+
+def event_deleted_admin_template(event: dict) -> tuple[str, str]:
+    subject = f"Suppression d'événement - {_plain(event.get('title'))}"
+    content = f"""
+        <p>Bonjour,</p>
+        <p>L'événement <strong>{_safe(event.get('title'))}</strong> a été supprimé du calendrier du {BRAND_NAME}.</p>
+        <div style="margin: 18px 0; padding: 14px 16px; border-left: 4px solid {DANGER_COLOR}; background: #fff1f0; border-radius: 6px; color: #8a1f17;">
+            Le fichier ICS joint permet de retirer cet événement de l'agenda administratif.
+        </div>
+        {_details_table(event)}
+    """
+    return subject, _layout(
+        "Suppression d'événement",
+        "La suppression a été enregistrée.",
+        content,
+        DANGER_COLOR,
+    )

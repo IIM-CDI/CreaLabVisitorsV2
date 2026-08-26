@@ -12,6 +12,7 @@ import ModalCreateEvent from '../../components/ModalCreateEvent/ModalCreateEvent
 import ModalEventDetails, {
     EventDetails,
 } from '../../components/ModalEventDetails/ModalEventDetails';
+import ModalViewEvent from '../../components/ModalViewEvent/ModalViewEvent';
 import Button from '../../components/Button/Button';
 import { useApi } from '../../hooks/useAPI';
 
@@ -19,17 +20,49 @@ interface CalendarLayoutProps {
     user: { email: string };
 }
 
+type ViewEventsScope = 'mine' | 'all';
+
+interface CalendarSelection {
+    start: string;
+    end?: string;
+}
+
+interface CalendarEvent {
+    id: string;
+    title: string;
+    description?: string;
+    badge?: string;
+    user?: string;
+    userMail?: string;
+    start: string;
+    end: string;
+    accepted?: boolean;
+    backgroundColor: string;
+    borderColor: string;
+    textColor: string;
+    timezone: string;
+}
+
+type DeletableEvent = Pick<CalendarEvent, 'id' | 'title' | 'userMail'>;
+
+const normalizeEmail = (email?: string) => (email ?? '').trim().toLowerCase();
+
 const CalendarLayout = ({ user }: CalendarLayoutProps) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isValidateModalOpen, setIsValidateModalOpen] = useState(false);
+    const [viewEventsScope, setViewEventsScope] =
+        useState<ViewEventsScope | null>(null);
     const [selectedEvent, setSelectedEvent] = useState<EventDetails | null>(
         null
     );
-    const [events, setEvents] = useState<any[]>([]);
-    const [clickedTime, setClickedTime] = useState<string | null>(null);
+    const [events, setEvents] = useState<CalendarEvent[]>([]);
+    const [calendarSelection, setCalendarSelection] =
+        useState<CalendarSelection | null>(null);
     const { getApiUrl, getHeaders } = useApi();
     const [isAdmin, setIsAdmin] = useState(false);
     const [isCompactCalendar, setIsCompactCalendar] = useState(false);
+    const [deletingEventId, setDeletingEventId] = useState<string | null>(null);
+    const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
 
     const checkAdminStatus = useCallback(async () => {
         const response = await fetch(`${getApiUrl()}/user/${user.email}`, {
@@ -98,8 +131,8 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
             minute: '2-digit' as const,
             hour12: false as const,
         },
-        slotMinTime: '08:00:00',
-        slotMaxTime: '20:00:00',
+        slotMinTime: '09:00:00',
+        slotMaxTime: '17:00:00',
         allDaySlot: false,
         editable: false,
         selectable: true,
@@ -108,7 +141,14 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
         eventDisplay: 'block' as const,
         dayMaxEvents: isCompactCalendar ? 2 : true,
         dateClick: (info: any) => {
-            setClickedTime(info.dateStr);
+            setCalendarSelection({ start: info.dateStr });
+            setIsModalOpen(true);
+        },
+        select: (info: any) => {
+            setCalendarSelection({
+                start: info.startStr,
+                end: info.endStr,
+            });
             setIsModalOpen(true);
         },
         eventClick: (info: any) => {
@@ -120,6 +160,7 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
                 badge: event.extendedProps.badge,
                 description: event.extendedProps.description,
                 user: event.extendedProps.user,
+                userMail: event.extendedProps.userMail,
                 start: event.start,
                 end: event.end,
                 backgroundColor: event.backgroundColor || '#c4c4c4',
@@ -144,13 +185,14 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
         const data = await response.json();
 
         const events = data.events.map((event: any) => ({
-            id: event.id,
+            id: String(event.id),
             title: event.title,
             description: event.description,
             badge: event.badge,
             user: event.user,
-            start: event.startStr,
-            end: event.endStr,
+            userMail: event.user_mail,
+            start: event.startStr || event.start || '',
+            end: event.endStr || event.end || '',
             accepted: event.accepted,
             backgroundColor: event.accepted ? event.color : '#c4c4c4',
             borderColor: event.accepted ? event.color : '#c4c4c4',
@@ -185,28 +227,127 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
         return () => clearInterval(interval);
     }, []);
 
+    useEffect(() => {
+        const handleEscapeKey = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') {
+                setIsActionMenuOpen(false);
+            }
+        };
+
+        if (isActionMenuOpen) {
+            document.addEventListener('keydown', handleEscapeKey);
+        }
+
+        return () => {
+            document.removeEventListener('keydown', handleEscapeKey);
+        };
+    }, [isActionMenuOpen]);
+
+    const closeCreateEventModal = () => {
+        setIsModalOpen(false);
+        setCalendarSelection(null);
+    };
+
+    const isViewModalOpen = viewEventsScope !== null;
+    const viewEventButtons: Array<{ scope: ViewEventsScope; text: string }> = [
+        { scope: 'mine', text: 'Mes événements' },
+        ...(isAdmin
+            ? [{ scope: 'all' as const, text: 'Tous les événements' }]
+            : []),
+    ];
+    const canDeleteEvent = useCallback(
+        (event: Pick<CalendarEvent, 'userMail'>) =>
+            isAdmin ||
+            normalizeEmail(event.userMail) === normalizeEmail(user.email),
+        [isAdmin, user.email]
+    );
+
+    const handleDeleteEvent = useCallback(
+        async (eventToDelete: DeletableEvent) => {
+            if (deletingEventId) return;
+
+            if (!canDeleteEvent(eventToDelete)) {
+                window.alert(
+                    'Vous ne pouvez supprimer que vos propres événements.'
+                );
+                return;
+            }
+
+            const confirmed = window.confirm(
+                `Supprimer "${eventToDelete.title}" ? Un mail d'annulation avec un fichier ICS sera envoyé.`
+            );
+
+            if (!confirmed) return;
+
+            setDeletingEventId(eventToDelete.id);
+
+            try {
+                const query = new URLSearchParams({
+                    requester_email: user.email,
+                });
+                const response = await fetch(
+                    `${getApiUrl()}/event/${eventToDelete.id}?${query}`,
+                    {
+                        method: 'DELETE',
+                        headers: getHeaders(),
+                    }
+                );
+
+                if (!response.ok) {
+                    let message = "La suppression de l'événement a échoué.";
+
+                    try {
+                        const data = await response.json();
+                        message = data.detail || message;
+                    } catch {
+                        // Keep the generic message when the backend returns no JSON.
+                    }
+
+                    window.alert(message);
+                    return;
+                }
+
+                setEvents((currentEvents) =>
+                    currentEvents.filter(
+                        (event) => event.id !== eventToDelete.id
+                    )
+                );
+                setSelectedEvent((currentEvent) =>
+                    currentEvent?.id === eventToDelete.id ? null : currentEvent
+                );
+                await fetchEvents();
+            } finally {
+                setDeletingEventId(null);
+            }
+        },
+        [
+            canDeleteEvent,
+            deletingEventId,
+            fetchEvents,
+            getApiUrl,
+            getHeaders,
+            user.email,
+        ]
+    );
+
     return (
         <div className="calendar-layout">
             <div className="navbar">
-                <div className="open-modal-create-event-button-container">
-                    {isAdmin && (
-                        <Button
-                            component_type="primary"
-                            type="button"
-                            text="Valider les événements"
-                            onClick={() => setIsValidateModalOpen(true)}
-                        />
-                    )}
+                <div className="navbar-menu-slot">
+                    <button
+                        className="navbar-menu-button"
+                        type="button"
+                        onClick={() => setIsActionMenuOpen(true)}
+                        aria-label="Ouvrir le menu"
+                        aria-haspopup="dialog"
+                        aria-controls="calendar-action-menu"
+                        aria-expanded={isActionMenuOpen}
+                    >
+                        <span aria-hidden="true" />
+                        <span aria-hidden="true" />
+                        <span aria-hidden="true" />
+                    </button>
                 </div>
-                {isValidateModalOpen && (
-                    <ModalValidateEvent
-                        isOpen={isValidateModalOpen}
-                        onClose={() => setIsValidateModalOpen(false)}
-                        eventInfo={events
-                            .filter((event) => !event.accepted)
-                            .map((event) => [event.id, event.title])}
-                    />
-                )}
                 <h1>Bienvenue au CreaLab {emailToName(user.email)}</h1>
                 <Button
                     type="button"
@@ -215,6 +356,83 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
                     text="Déconnexion"
                 />
             </div>
+            {isActionMenuOpen && (
+                <div
+                    className="action-menu-backdrop"
+                    onClick={() => setIsActionMenuOpen(false)}
+                >
+                    <aside
+                        id="calendar-action-menu"
+                        className="action-menu-panel"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="calendar-action-menu-title"
+                        onClick={(event) => event.stopPropagation()}
+                    >
+                        <header className="action-menu-header">
+                            <h2 id="calendar-action-menu-title">Menu</h2>
+                            <button
+                                className="action-menu-close"
+                                type="button"
+                                onClick={() => setIsActionMenuOpen(false)}
+                                aria-label="Fermer le menu"
+                            >
+                                ×
+                            </button>
+                        </header>
+                        <div className="action-menu-buttons">
+                            {viewEventButtons.map(({ scope, text }) => (
+                                <Button
+                                    key={scope}
+                                    component_type="secondary"
+                                    type="button"
+                                    text={text}
+                                    onClick={() => {
+                                        setIsActionMenuOpen(false);
+                                        setViewEventsScope(scope);
+                                    }}
+                                    aria-haspopup="dialog"
+                                    aria-expanded={viewEventsScope === scope}
+                                />
+                            ))}
+                            {isAdmin && (
+                                <Button
+                                    component_type="primary"
+                                    type="button"
+                                    text="Valider les événements"
+                                    onClick={() => {
+                                        setIsActionMenuOpen(false);
+                                        setIsValidateModalOpen(true);
+                                    }}
+                                    aria-haspopup="dialog"
+                                    aria-expanded={isValidateModalOpen}
+                                />
+                            )}
+                        </div>
+                    </aside>
+                </div>
+            )}
+            {viewEventsScope && (
+                <ModalViewEvent
+                    isOpen={true}
+                    onClose={() => setViewEventsScope(null)}
+                    events={events}
+                    userMail={user.email}
+                    scope={viewEventsScope}
+                    canDeleteEvent={canDeleteEvent}
+                    onDeleteEvent={handleDeleteEvent}
+                    deletingEventId={deletingEventId}
+                />
+            )}
+            {isValidateModalOpen && (
+                <ModalValidateEvent
+                    isOpen={isValidateModalOpen}
+                    onClose={() => setIsValidateModalOpen(false)}
+                    eventInfo={events
+                        .filter((event) => !event.accepted)
+                        .map((event) => [event.id, event.title])}
+                />
+            )}
 
             <div className="calendar-container">
                 <Fullcalendar
@@ -229,36 +447,84 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
                     ]}
                     {...calendarConfig}
                     events={events}
-                    eventContent={(arg) => (
-                        <div className="fc-event-content">
-                            <div className="fc-event-title">
-                                {arg.event.title}
+                    eventContent={(arg) => {
+                        const eventToDelete = {
+                            id: arg.event.id,
+                            title: arg.event.title,
+                            userMail: arg.event.extendedProps.userMail,
+                        };
+                        const isDeleting = deletingEventId === arg.event.id;
+
+                        return (
+                            <div className="calendar-event-content">
+                                <div className="calendar-event-text">
+                                    <div className="fc-event-title">
+                                        {arg.event.title}
+                                    </div>
+                                    <div className="fc-event-badge">
+                                        {arg.event.extendedProps.badge}
+                                    </div>
+                                </div>
+                                {canDeleteEvent(eventToDelete) && (
+                                    <button
+                                        className={`calendar-event-delete ${
+                                            isDeleting
+                                                ? 'calendar-event-delete-loading'
+                                                : ''
+                                        }`.trim()}
+                                        type="button"
+                                        onClick={(event) => {
+                                            event.preventDefault();
+                                            event.stopPropagation();
+                                            handleDeleteEvent(eventToDelete);
+                                        }}
+                                        disabled={isDeleting}
+                                        aria-label={
+                                            isDeleting
+                                                ? `Suppression de l'événement ${arg.event.title}`
+                                                : `Supprimer l'événement ${arg.event.title}`
+                                        }
+                                    >
+                                        {isDeleting ? (
+                                            <span
+                                                className="calendar-event-delete-spinner"
+                                                aria-hidden="true"
+                                            />
+                                        ) : (
+                                            '×'
+                                        )}
+                                    </button>
+                                )}
                             </div>
-                            <div className="fc-event-badge">
-                                {arg.event.extendedProps.badge}
-                            </div>
-                        </div>
-                    )}
+                        );
+                    }}
                 />
             </div>
 
-            {!isModalOpen && (
-                <div className="open-modal-button-container">
-                    <button
-                        className="open-modal-button"
-                        type="button"
-                        onClick={() => setIsModalOpen(true)}
-                    >
-                        +
-                    </button>
-                </div>
-            )}
+            {!isModalOpen &&
+                !isViewModalOpen &&
+                !isValidateModalOpen &&
+                !isActionMenuOpen &&
+                !selectedEvent && (
+                    <div className="open-modal-button-container">
+                        <button
+                            className="open-modal-button"
+                            type="button"
+                            onClick={() => {
+                                setCalendarSelection(null);
+                                setIsModalOpen(true);
+                            }}
+                        >
+                            +
+                        </button>
+                    </div>
+                )}
             {isModalOpen && (
                 <ModalCreateEvent
                     isOpen={isModalOpen}
-                    onClose={() => setIsModalOpen(false)}
+                    onClose={closeCreateEventModal}
                     userMail={user.email}
-                    clickedTime={clickedTime}
+                    initialSelection={calendarSelection}
                 />
             )}
             {selectedEvent && (
@@ -266,6 +532,9 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
                     isOpen={selectedEvent !== null}
                     onClose={() => setSelectedEvent(null)}
                     event={selectedEvent}
+                    canDelete={canDeleteEvent(selectedEvent)}
+                    onDelete={() => handleDeleteEvent(selectedEvent)}
+                    isDeleting={deletingEventId === selectedEvent.id}
                 />
             )}
         </div>

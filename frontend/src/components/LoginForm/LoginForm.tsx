@@ -11,9 +11,12 @@ const LoginForm = () => {
     const [password, setPassword] = useState('');
 
     const [errorMessage, setErrorMessage] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+
+        if (isSubmitting) return;
 
         if (
             'devinci.fr' !== email.split('@')[1] &&
@@ -25,40 +28,42 @@ const LoginForm = () => {
             return;
         }
 
-        fetch(`${getApiUrl()}/login/`, {
-            method: 'POST',
-            headers: getHeaders(),
-            body: JSON.stringify({ email, password }),
-        })
-            .then(async (response) => {
-                const data = await response.json();
-                if (!response.ok) {
-                    throw new Error(
-                        data.detail ||
-                            data.message ||
-                            'Erreur lors de la connexion.'
-                    );
-                }
-
-                localStorage.setItem(
-                    'user',
-                    JSON.stringify(data.user || { email })
-                );
-                localStorage.setItem('mail', email);
-                setEmail('');
-                setPassword('');
-                setErrorMessage('');
-                window.location.reload();
-            })
-            .catch((error) => {
-                setErrorMessage(
-                    error instanceof Error
-                        ? error.message
-                        : 'Erreur lors de la connexion.'
-                );
-            });
-
         setErrorMessage('');
+        setIsSubmitting(true);
+
+        try {
+            const response = await fetch(`${getApiUrl()}/login/`, {
+                method: 'POST',
+                headers: getHeaders(),
+                body: JSON.stringify({ email, password }),
+            });
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.detail ||
+                        data.message ||
+                        'Erreur lors de la connexion.'
+                );
+            }
+
+            localStorage.setItem(
+                'user',
+                JSON.stringify(data.user || { email })
+            );
+            localStorage.setItem('mail', email);
+            setEmail('');
+            setPassword('');
+            setErrorMessage('');
+            window.location.reload();
+        } catch (error) {
+            setErrorMessage(
+                error instanceof Error
+                    ? error.message
+                    : 'Erreur lors de la connexion.'
+            );
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -81,7 +86,13 @@ const LoginForm = () => {
                     placeholder="********"
                     required
                 />
-                <Button type="submit" text="Se connecter" />
+                <Button
+                    type="submit"
+                    text={isSubmitting ? 'Connexion...' : 'Se connecter'}
+                    disabled={isSubmitting}
+                    aria-busy={isSubmitting}
+                    isLoading={isSubmitting}
+                />
             </form>
             {errorMessage && <p className="error-message">{errorMessage}</p>}
         </div>

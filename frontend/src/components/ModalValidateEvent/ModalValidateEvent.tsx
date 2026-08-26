@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './ModalValidateEvent.css';
 import { useModalManager } from '../../hooks/useModelManager';
 import Button from '../Button/Button';
@@ -11,6 +11,11 @@ interface ModalValidateEventProps {
     eventInfo: [string, string][];
 }
 
+type LoadingAction = {
+    eventId: string;
+    action: 'accept' | 'reject';
+};
+
 const ModalValidateEvent = ({
     isOpen,
     onClose,
@@ -18,6 +23,9 @@ const ModalValidateEvent = ({
     eventInfo,
 }: ModalValidateEventProps) => {
     const { getApiUrl, getHeaders } = useApi();
+    const [loadingAction, setLoadingAction] = useState<LoadingAction | null>(
+        null
+    );
     const { handleClose, handleBackdropClick } = useModalManager({
         isOpen,
         onClose,
@@ -25,6 +33,10 @@ const ModalValidateEvent = ({
     });
 
     const handleAcceptEvent = async (eventId: string) => {
+        if (loadingAction) return;
+
+        setLoadingAction({ eventId, action: 'accept' });
+
         try {
             const response = await fetch(
                 `${getApiUrl()}/event/validate/${eventId}`,
@@ -43,14 +55,18 @@ const ModalValidateEvent = ({
             if (onEventChange) {
                 onEventChange();
             }
+            window.location.reload();
         } catch (error) {
             console.error('Error:', error);
+            setLoadingAction(null);
         }
-
-        window.location.reload();
     };
 
     const handleRejectEvent = async (eventId: string) => {
+        if (loadingAction) return;
+
+        setLoadingAction({ eventId, action: 'reject' });
+
         try {
             const response = await fetch(
                 `${getApiUrl()}/event/reject/${eventId}`,
@@ -69,11 +85,11 @@ const ModalValidateEvent = ({
             if (onEventChange) {
                 onEventChange();
             }
+            window.location.reload();
         } catch (error) {
             console.error('Error:', error);
+            setLoadingAction(null);
         }
-
-        window.location.reload();
     };
 
     return (
@@ -87,26 +103,54 @@ const ModalValidateEvent = ({
                 aria-modal="true"
                 aria-labelledby="validate-events-title"
             >
+                <button
+                    className="validate-events-close"
+                    type="button"
+                    onClick={handleClose}
+                    aria-label="Fermer la validation des événements"
+                >
+                    ×
+                </button>
                 <h2 id="validate-events-title">Valider les événements</h2>
-                {eventInfo.map(([eventId, eventTitle], index) => (
-                    <div key={index} className="event-item">
-                        <p className="event-id">
-                            Événement : {eventTitle} - ID : {eventId}
-                        </p>
-                        <div className="event-buttons">
-                            <Button
-                                component_type="accept"
-                                text="Accepter"
-                                onClick={() => handleAcceptEvent(eventId)}
-                            />
-                            <Button
-                                component_type="danger"
-                                text="Rejeter"
-                                onClick={() => handleRejectEvent(eventId)}
-                            />
+                {eventInfo.map(([eventId, eventTitle], index) => {
+                    const isAccepting =
+                        loadingAction?.eventId === eventId &&
+                        loadingAction.action === 'accept';
+                    const isRejecting =
+                        loadingAction?.eventId === eventId &&
+                        loadingAction.action === 'reject';
+                    const isActionDisabled = Boolean(loadingAction);
+
+                    return (
+                        <div key={index} className="event-item">
+                            <p className="event-id">
+                                Événement : {eventTitle} - ID : {eventId}
+                            </p>
+                            <div className="event-buttons">
+                                <Button
+                                    component_type="accept"
+                                    text={
+                                        isAccepting
+                                            ? 'Validation...'
+                                            : 'Accepter'
+                                    }
+                                    onClick={() => handleAcceptEvent(eventId)}
+                                    disabled={isActionDisabled}
+                                    aria-busy={isAccepting}
+                                    isLoading={isAccepting}
+                                />
+                                <Button
+                                    component_type="danger"
+                                    text={isRejecting ? 'Rejet...' : 'Rejeter'}
+                                    onClick={() => handleRejectEvent(eventId)}
+                                    disabled={isActionDisabled}
+                                    aria-busy={isRejecting}
+                                    isLoading={isRejecting}
+                                />
+                            </div>
                         </div>
-                    </div>
-                ))}
+                    );
+                })}
                 <Button
                     component_type="secondary"
                     text="Fermer"

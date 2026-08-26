@@ -6,6 +6,7 @@
 
     gap: 10px;
     width: 100%;
+    animation: app-rise-in var(--motion-slow) var(--ease-entrance);
 }
 
 .login-form h2 {
@@ -33,4 +34,5 @@
     max-width: 340px;
     font-weight: 700;
     overflow-wrap: anywhere;
+    animation: app-rise-in var(--motion-base) var(--ease-entrance);
 }

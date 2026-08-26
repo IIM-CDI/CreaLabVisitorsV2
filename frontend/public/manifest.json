@@ -1,6 +1,7 @@
 {
-    "short_name": "React App",
-    "name": "Create React App Sample",
+    "short_name": "CreaLab IIM",
+    "name": "Calendrier CreaLab IIM",
+    "description": "Calendrier de reservation des evenements du CreaLab de l'IIM.",
     "icons": [
         {
             "src": "favicon.ico",
@@ -10,16 +11,30 @@
         {
             "src": "logo192.png",
             "type": "image/png",
-            "sizes": "192x192"
+            "sizes": "192x192",
+            "purpose": "any"
         },
         {
             "src": "logo512.png",
             "type": "image/png",
-            "sizes": "512x512"
+            "sizes": "512x512",
+            "purpose": "any"
+        },
+        {
+            "src": "maskable-icon-192.png",
+            "type": "image/png",
+            "sizes": "192x192",
+            "purpose": "maskable"
+        },
+        {
+            "src": "maskable-icon-512.png",
+            "type": "image/png",
+            "sizes": "512x512",
+            "purpose": "maskable"
         }
     ],
     "start_url": ".",
     "display": "standalone",
-    "theme_color": "#000000",
+    "theme_color": "#0b63ce",
     "background_color": "#ffffff"
 }
