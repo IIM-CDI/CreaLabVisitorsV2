@@ -20,6 +20,18 @@ from postgrest import APIResponse
 
 # EMAIL SMTP SYSTEM
 
+
+EmailRecipients = str | list[str] | tuple[str, ...] | set[str] | None
+
+
+def _recipient_list(recipients: EmailRecipients) -> list[str]:
+    if not recipients:
+        return []
+    if isinstance(recipients, str):
+        return [recipients]
+    return [recipient for recipient in recipients if recipient]
+
+
 def _send_via_ssl(smtp_server: str, smtp_port: int, smtp_timeout: int, sender: str, password: str, recipient: str, message: str):
     with smtplib.SMTP_SSL(smtp_server, smtp_port, timeout=smtp_timeout, context=ssl.create_default_context()) as server:
         server.login(sender, password)
@@ -107,7 +119,7 @@ def _event_from_response(response: APIResponse) -> dict:
 
 
 def send_new_event_email(
-    admin_email: str | None,
+    admin_email: EmailRecipients,
     user_email: str,
     data: dict,
     validation_url: str,
@@ -117,7 +129,8 @@ def send_new_event_email(
     admin_subject, admin_body = new_event_admin_template(data, validation_url, rejection_url)
 
     send_email(user_email, user_subject, user_body)
-    send_email(admin_email, admin_subject, admin_body)
+    for recipient in _recipient_list(admin_email):
+        send_email(recipient, admin_subject, admin_body)
 
 
 def send_validation_email(admin_email: str | None, recipient: str, response: APIResponse, attachments: list[str] | None = None):

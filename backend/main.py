@@ -168,9 +168,15 @@ def unique_emails(*emails: str | None) -> list[str]:
         if not email:
             continue
         normalized_email = normalize_email(email)
+        if not normalized_email:
+            continue
         if normalized_email not in recipients:
             recipients.append(normalized_email)
     return recipients
+
+
+def get_event_validation_admin_emails() -> list[str]:
+    return unique_emails(get_admin_email(), os.getenv("MAIL_CODING"))
 
 
 def get_event_ics_path(event_id: int, suffix: str = "") -> str:
@@ -408,7 +414,7 @@ async def create_event(payload: EventCreateRequest, request: Request):
     notify_admin_or_log(
         "New event notification",
         send_new_event_email,
-        admin_email=get_admin_email(),
+        admin_email=get_event_validation_admin_emails(),
         user_email=user_mail,
         data={
             "id": next_id,
