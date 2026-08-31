@@ -18,11 +18,12 @@ interface ViewEvent {
 type ViewEventScope = 'mine' | 'all';
 type ViewEventStatusSort = 'date' | 'pending-first' | 'accepted-first';
 
-const statusSortOptions: Array<{ value: ViewEventStatusSort; label: string }> = [
-    { value: 'date', label: 'Date' },
-    { value: 'pending-first', label: 'En attente' },
-    { value: 'accepted-first', label: 'Validés' },
-];
+const statusSortOptions: Array<{ value: ViewEventStatusSort; label: string }> =
+    [
+        { value: 'date', label: 'Date' },
+        { value: 'pending-first', label: 'En attente' },
+        { value: 'accepted-first', label: 'Validés' },
+    ];
 
 interface ModalViewEventProps {
     isOpen: boolean;
@@ -93,8 +94,7 @@ const ModalViewEvent = ({
     onValidateEvent,
     validatingEventId,
 }: ModalViewEventProps) => {
-    const [statusSort, setStatusSort] =
-        useState<ViewEventStatusSort>('date');
+    const [statusSort, setStatusSort] = useState<ViewEventStatusSort>('date');
     const { handleClose, handleBackdropClick } = useModalManager({
         isOpen,
         onClose,
@@ -205,7 +205,8 @@ const ModalViewEvent = ({
                             const isValidating = validatingEventId === event.id;
                             const canDelete = canDeleteEvent(event);
                             const canValidate = canValidateEvent(event);
-                            const isCurrentEventBusy = isDeleting || isValidating;
+                            const isCurrentEventBusy =
+                                isDeleting || isValidating;
 
                             return (
                                 <li key={event.id} className="view-event-item">
@@ -270,7 +271,9 @@ const ModalViewEvent = ({
                                                     onClick={() =>
                                                         onValidateEvent(event)
                                                     }
-                                                    disabled={isCurrentEventBusy}
+                                                    disabled={
+                                                        isCurrentEventBusy
+                                                    }
                                                     isLoading={isValidating}
                                                 />
                                             )}
@@ -286,7 +289,9 @@ const ModalViewEvent = ({
                                                     onClick={() =>
                                                         onDeleteEvent(event)
                                                     }
-                                                    disabled={isCurrentEventBusy}
+                                                    disabled={
+                                                        isCurrentEventBusy
+                                                    }
                                                     isLoading={isDeleting}
                                                 />
                                             )}
