@@ -718,13 +718,7 @@
     }
 }
 
-
-
-
-
-
-
-.fc-timegrid-slots>table>tbody>tr:nth-child(-n + 2),
-.fc-timegrid-slots>table>tbody>tr:nth-last-child(-n + 4) {
+.fc-timegrid-slots > table > tbody > tr:nth-child(-n + 2),
+.fc-timegrid-slots > table > tbody > tr:nth-last-child(-n + 4) {
     background-color: #dddddd68 !important;
 }
