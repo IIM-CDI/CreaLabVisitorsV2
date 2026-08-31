@@ -90,6 +90,48 @@
     animation: app-rise-in var(--motion-base) var(--ease-entrance);
 }
 
+.view-events-sort {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    width: fit-content;
+    max-width: 100%;
+    padding: 4px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background-color: #f9fafb;
+}
+
+.view-events-sort-button {
+    min-height: 36px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    background-color: transparent;
+    color: var(--color-text);
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 800;
+    padding: 7px 10px;
+    transition:
+        background-color var(--motion-base) var(--ease-standard),
+        color var(--motion-base) var(--ease-standard),
+        box-shadow var(--motion-base) var(--ease-standard);
+}
+
+.view-events-sort-button:not(.view-events-sort-button-active):hover {
+    background-color: #e5e7eb;
+}
+
+.view-events-sort-button-active {
+    background-color: #0b63ce;
+    color: #ffffff;
+    box-shadow: 0 4px 10px rgba(11, 99, 206, 0.18);
+}
+
+.view-events-sort-button:focus-visible {
+    outline-offset: 3px;
+}
+
 .view-events-list {
     display: grid;
     gap: 12px;
@@ -197,6 +239,8 @@
 
 .view-event-item-actions {
     display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
     justify-content: flex-end;
 }
 
@@ -238,6 +282,14 @@
     .view-event-details div {
         grid-template-columns: 1fr;
         gap: 3px;
+    }
+
+    .view-events-sort {
+        width: 100%;
+    }
+
+    .view-events-sort-button {
+        flex: 1 1 88px;
     }
 
     .view-events-actions .button {
