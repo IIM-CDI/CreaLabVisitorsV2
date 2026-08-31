@@ -299,7 +299,7 @@
 }
 
 .fc-timegrid-slot {
-    height: 48px !important;
+    height: 33px !important;
     border-color: #ebebeb !important;
 }
 
@@ -716,4 +716,15 @@
     .fc-daygrid-day-frame {
         min-height: 74px;
     }
+}
+
+
+
+
+
+
+
+.fc-timegrid-slots>table>tbody>tr:nth-child(-n + 2),
+.fc-timegrid-slots>table>tbody>tr:nth-last-child(-n + 4) {
+    background-color: #dddddd68 !important;
 }
