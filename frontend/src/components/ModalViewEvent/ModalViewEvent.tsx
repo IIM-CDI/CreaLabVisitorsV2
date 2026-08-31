@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import './ModalViewEvent.css';
 import { useModalManager } from '../../hooks/useModelManager';
 import Button from '../Button/Button';
@@ -16,6 +16,13 @@ interface ViewEvent {
 }
 
 type ViewEventScope = 'mine' | 'all';
+type ViewEventStatusSort = 'date' | 'pending-first' | 'accepted-first';
+
+const statusSortOptions: Array<{ value: ViewEventStatusSort; label: string }> = [
+    { value: 'date', label: 'Date' },
+    { value: 'pending-first', label: 'En attente' },
+    { value: 'accepted-first', label: 'Validés' },
+];
 
 interface ModalViewEventProps {
     isOpen: boolean;
@@ -26,6 +33,9 @@ interface ModalViewEventProps {
     canDeleteEvent: (event: ViewEvent) => boolean;
     onDeleteEvent: (event: ViewEvent) => void;
     deletingEventId: string | null;
+    canValidateEvent: (event: ViewEvent) => boolean;
+    onValidateEvent: (event: ViewEvent) => void;
+    validatingEventId: string | null;
 }
 
 const getEventTime = (date: Date | string | null) => {
@@ -58,6 +68,18 @@ const getUserKey = (value: string) =>
 
 const normalizeEmail = (email?: string) => (email ?? '').trim().toLowerCase();
 
+const getStatusSortRank = (
+    event: ViewEvent,
+    statusSort: ViewEventStatusSort
+) => {
+    const isPending = event.accepted === false;
+
+    if (statusSort === 'pending-first') return isPending ? 0 : 1;
+    if (statusSort === 'accepted-first') return isPending ? 1 : 0;
+
+    return 0;
+};
+
 const ModalViewEvent = ({
     isOpen,
     onClose,
@@ -67,7 +89,12 @@ const ModalViewEvent = ({
     canDeleteEvent,
     onDeleteEvent,
     deletingEventId,
+    canValidateEvent,
+    onValidateEvent,
+    validatingEventId,
 }: ModalViewEventProps) => {
+    const [statusSort, setStatusSort] =
+        useState<ViewEventStatusSort>('date');
     const { handleClose, handleBackdropClick } = useModalManager({
         isOpen,
         onClose,
@@ -83,26 +110,32 @@ const ModalViewEvent = ({
         const userKey = getUserKey(userMail);
         const normalizedUserMail = normalizeEmail(userMail);
 
-        return events
-            .filter((event) => {
-                const startTime = getEventTime(event.start);
+        return events.filter((event) => {
+            const startTime = getEventTime(event.start);
 
-                if (startTime === null || startTime < now) return false;
+            if (startTime === null || startTime < now) return false;
 
-                const belongsToUser =
-                    normalizeEmail(event.userMail) === normalizedUserMail ||
-                    (!event.userMail &&
-                        getUserKey(event.user ?? '') === userKey);
+            const belongsToUser =
+                normalizeEmail(event.userMail) === normalizedUserMail ||
+                (!event.userMail && getUserKey(event.user ?? '') === userKey);
 
-                return isAllEventsView || belongsToUser;
-            })
-            .sort((eventA, eventB) => {
-                const startA = getEventTime(eventA.start) ?? 0;
-                const startB = getEventTime(eventB.start) ?? 0;
-
-                return startA - startB;
-            });
+            return isAllEventsView || belongsToUser;
+        });
     }, [events, isAllEventsView, userMail]);
+
+    const sortedEvents = useMemo(() => {
+        return [...upcomingEvents].sort((eventA, eventB) => {
+            const statusRankA = getStatusSortRank(eventA, statusSort);
+            const statusRankB = getStatusSortRank(eventB, statusSort);
+
+            if (statusRankA !== statusRankB) return statusRankA - statusRankB;
+
+            const startA = getEventTime(eventA.start) ?? 0;
+            const startB = getEventTime(eventB.start) ?? 0;
+
+            return startA - startB;
+        });
+    }, [statusSort, upcomingEvents]);
 
     if (!isOpen) return null;
 
@@ -137,14 +170,42 @@ const ModalViewEvent = ({
                     </button>
                 </header>
 
+                {upcomingEvents.length > 0 && (
+                    <div
+                        className="view-events-sort"
+                        role="group"
+                        aria-label="Trier les événements"
+                    >
+                        {statusSortOptions.map(({ value, label }) => (
+                            <button
+                                key={value}
+                                className={`view-events-sort-button ${
+                                    statusSort === value
+                                        ? 'view-events-sort-button-active'
+                                        : ''
+                                }`.trim()}
+                                type="button"
+                                onClick={() => setStatusSort(value)}
+                                aria-pressed={statusSort === value}
+                            >
+                                {label}
+                            </button>
+                        ))}
+                    </div>
+                )}
+
                 {upcomingEvents.length === 0 ? (
                     <p className="view-events-empty">
                         Aucun événement à venir.
                     </p>
                 ) : (
                     <ul className="view-events-list">
-                        {upcomingEvents.map((event) => {
+                        {sortedEvents.map((event) => {
                             const isDeleting = deletingEventId === event.id;
+                            const isValidating = validatingEventId === event.id;
+                            const canDelete = canDeleteEvent(event);
+                            const canValidate = canValidateEvent(event);
+                            const isCurrentEventBusy = isDeleting || isValidating;
 
                             return (
                                 <li key={event.id} className="view-event-item">
@@ -195,22 +256,40 @@ const ModalViewEvent = ({
                                             'Sans description'}
                                     </p>
 
-                                    {canDeleteEvent(event) && (
+                                    {(canDelete || canValidate) && (
                                         <div className="view-event-item-actions">
-                                            <Button
-                                                component_type="danger"
-                                                type="button"
-                                                text={
-                                                    isDeleting
-                                                        ? 'Suppression...'
-                                                        : 'Supprimer'
-                                                }
-                                                onClick={() =>
-                                                    onDeleteEvent(event)
-                                                }
-                                                disabled={isDeleting}
-                                                isLoading={isDeleting}
-                                            />
+                                            {canValidate && (
+                                                <Button
+                                                    component_type="accept"
+                                                    type="button"
+                                                    text={
+                                                        isValidating
+                                                            ? 'Validation...'
+                                                            : 'Valider'
+                                                    }
+                                                    onClick={() =>
+                                                        onValidateEvent(event)
+                                                    }
+                                                    disabled={isCurrentEventBusy}
+                                                    isLoading={isValidating}
+                                                />
+                                            )}
+                                            {canDelete && (
+                                                <Button
+                                                    component_type="danger"
+                                                    type="button"
+                                                    text={
+                                                        isDeleting
+                                                            ? 'Suppression...'
+                                                            : 'Supprimer'
+                                                    }
+                                                    onClick={() =>
+                                                        onDeleteEvent(event)
+                                                    }
+                                                    disabled={isCurrentEventBusy}
+                                                    isLoading={isDeleting}
+                                                />
+                                            )}
                                         </div>
                                     )}
                                 </li>
