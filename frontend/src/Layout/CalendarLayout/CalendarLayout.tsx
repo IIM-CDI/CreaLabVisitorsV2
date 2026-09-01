@@ -46,6 +46,68 @@ type DeletableEvent = Pick<CalendarEvent, 'id' | 'title' | 'userMail'>;
 type ValidatableEvent = Pick<CalendarEvent, 'id' | 'title' | 'accepted'>;
 
 const normalizeEmail = (email?: string) => (email ?? '').trim().toLowerCase();
+const DATE_ONLY_VALUE = /^\d{4}-\d{2}-\d{2}$/;
+const MONTH_VIEW_TYPE = 'dayGridMonth';
+const MULTI_DAY_MONTH_START_TIME = '09:00';
+const MULTI_DAY_MONTH_END_TIME = '17:00';
+
+interface FullCalendarSelectionInfo {
+    startStr: string;
+    endStr?: string;
+    allDay?: boolean;
+    view?: {
+        type?: string;
+    };
+}
+
+const isDateOnlyValue = (value?: string): value is string =>
+    typeof value === 'string' && DATE_ONLY_VALUE.test(value);
+
+const shiftDateOnlyValue = (dateValue: string, dayDelta: number) => {
+    const [year, month, day] = dateValue.split('-').map(Number);
+    const shiftedDate = new Date(Date.UTC(year, month - 1, day + dayDelta));
+
+    return shiftedDate.toISOString().slice(0, 10);
+};
+
+const buildDateTimeSelectionValue = (date: string, time: string) =>
+    `${date}T${time}`;
+
+const buildCalendarSelection = (
+    info: FullCalendarSelectionInfo
+): CalendarSelection => {
+    if (
+        info.view?.type !== MONTH_VIEW_TYPE ||
+        !info.allDay ||
+        !isDateOnlyValue(info.startStr) ||
+        !isDateOnlyValue(info.endStr)
+    ) {
+        return {
+            start: info.startStr,
+            end: info.endStr,
+        };
+    }
+
+    const inclusiveEndDate = shiftDateOnlyValue(info.endStr, -1);
+
+    if (inclusiveEndDate <= info.startStr) {
+        return {
+            start: info.startStr,
+            end: info.endStr,
+        };
+    }
+
+    return {
+        start: buildDateTimeSelectionValue(
+            info.startStr,
+            MULTI_DAY_MONTH_START_TIME
+        ),
+        end: buildDateTimeSelectionValue(
+            inclusiveEndDate,
+            MULTI_DAY_MONTH_END_TIME
+        ),
+    };
+};
 
 const getEventTime = (date: Date | string | null) => {
     if (!date) return null;
@@ -169,10 +231,7 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
             setIsModalOpen(true);
         },
         select: (info: any) => {
-            setCalendarSelection({
-                start: info.startStr,
-                end: info.endStr,
-            });
+            setCalendarSelection(buildCalendarSelection(info));
             setIsModalOpen(true);
         },
         eventClick: (info: any) => {
