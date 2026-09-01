@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Fullcalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -7,7 +7,6 @@ import momentTimezonePlugin from '@fullcalendar/moment-timezone';
 import frLocale from '@fullcalendar/core/locales/fr';
 import './CalendarLayout.css';
 
-import ModalValidateEvent from '../../components/ModalValidateEvent/ModalValidateEvent';
 import ModalCreateEvent from '../../components/ModalCreateEvent/ModalCreateEvent';
 import ModalEventDetails, {
     EventDetails,
@@ -44,12 +43,34 @@ interface CalendarEvent {
 }
 
 type DeletableEvent = Pick<CalendarEvent, 'id' | 'title' | 'userMail'>;
+type ValidatableEvent = Pick<CalendarEvent, 'id' | 'title' | 'accepted'>;
 
 const normalizeEmail = (email?: string) => (email ?? '').trim().toLowerCase();
 
+const getEventTime = (date: Date | string | null) => {
+    if (!date) return null;
+
+    const eventDate = date instanceof Date ? date : new Date(date);
+    const time = eventDate.getTime();
+
+    return Number.isNaN(time) ? null : time;
+};
+
+const getUserKey = (value: string) =>
+    value.split('@')[0].replace(/[.\s]/g, '').toLowerCase();
+
+const eventBelongsToUser = (
+    event: Pick<CalendarEvent, 'user' | 'userMail'>,
+    userMail: string
+) =>
+    normalizeEmail(event.userMail) === normalizeEmail(userMail) ||
+    (!event.userMail && getUserKey(event.user ?? '') === getUserKey(userMail));
+
+const formatPendingValidationLabel = (count: number) =>
+    `${count} événement${count > 1 ? 's' : ''} à valider`;
+
 const CalendarLayout = ({ user }: CalendarLayoutProps) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isValidateModalOpen, setIsValidateModalOpen] = useState(false);
     const [viewEventsScope, setViewEventsScope] =
         useState<ViewEventsScope | null>(null);
     const [selectedEvent, setSelectedEvent] = useState<EventDetails | null>(
@@ -62,6 +83,9 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
     const [isAdmin, setIsAdmin] = useState(false);
     const [isCompactCalendar, setIsCompactCalendar] = useState(false);
     const [deletingEventId, setDeletingEventId] = useState<string | null>(null);
+    const [validatingEventId, setValidatingEventId] = useState<string | null>(
+        null
+    );
     const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
 
     const checkAdminStatus = useCallback(async () => {
@@ -131,8 +155,8 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
             minute: '2-digit' as const,
             hour12: false as const,
         },
-        slotMinTime: '09:00:00',
-        slotMaxTime: '17:00:00',
+        slotMinTime: '08:00:00',
+        slotMaxTime: '20:00:00',
         allDaySlot: false,
         editable: false,
         selectable: true,
@@ -249,10 +273,52 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
     };
 
     const isViewModalOpen = viewEventsScope !== null;
-    const viewEventButtons: Array<{ scope: ViewEventsScope; text: string }> = [
-        { scope: 'mine', text: 'Mes événements' },
+    const pendingValidationCounts = useMemo(() => {
+        const counts = { mine: 0, all: 0 };
+
+        if (!isAdmin) return counts;
+
+        const now = Date.now();
+
+        events.forEach((event) => {
+            const startTime = getEventTime(event.start);
+
+            if (
+                event.accepted !== false ||
+                startTime === null ||
+                startTime < now
+            ) {
+                return;
+            }
+
+            counts.all += 1;
+
+            if (eventBelongsToUser(event, user.email)) {
+                counts.mine += 1;
+            }
+        });
+
+        return counts;
+    }, [events, isAdmin, user.email]);
+    const hasPendingValidation = pendingValidationCounts.all > 0;
+    const viewEventButtons: Array<{
+        scope: ViewEventsScope;
+        text: string;
+        pendingValidationCount: number;
+    }> = [
+        {
+            scope: 'mine',
+            text: 'Mes événements',
+            pendingValidationCount: pendingValidationCounts.mine,
+        },
         ...(isAdmin
-            ? [{ scope: 'all' as const, text: 'Tous les événements' }]
+            ? [
+                  {
+                      scope: 'all' as const,
+                      text: 'Tous les événements',
+                      pendingValidationCount: pendingValidationCounts.all,
+                  },
+              ]
             : []),
     ];
     const canDeleteEvent = useCallback(
@@ -260,6 +326,11 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
             isAdmin ||
             normalizeEmail(event.userMail) === normalizeEmail(user.email),
         [isAdmin, user.email]
+    );
+    const canValidateEvent = useCallback(
+        (event: Pick<CalendarEvent, 'accepted'>) =>
+            isAdmin && event.accepted === false,
+        [isAdmin]
     );
 
     const handleDeleteEvent = useCallback(
@@ -330,6 +401,63 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
         ]
     );
 
+    const handleValidateEvent = useCallback(
+        async (eventToValidate: ValidatableEvent) => {
+            if (validatingEventId) return;
+
+            if (!canValidateEvent(eventToValidate)) return;
+
+            setValidatingEventId(eventToValidate.id);
+
+            try {
+                const response = await fetch(
+                    `${getApiUrl()}/event/validate/${eventToValidate.id}`,
+                    {
+                        method: 'PUT',
+                        headers: getHeaders(),
+                    }
+                );
+
+                if (!response.ok) {
+                    let message = "La validation de l'événement a échoué.";
+
+                    try {
+                        const data = await response.json();
+                        message = data.detail || message;
+                    } catch {
+                        // Keep the generic message when the backend returns no JSON.
+                    }
+
+                    window.alert(message);
+                    return;
+                }
+
+                setEvents((currentEvents) =>
+                    currentEvents.map((event) =>
+                        event.id === eventToValidate.id
+                            ? { ...event, accepted: true }
+                            : event
+                    )
+                );
+                setSelectedEvent((currentEvent) =>
+                    currentEvent?.id === eventToValidate.id
+                        ? { ...currentEvent, accepted: true }
+                        : currentEvent
+                );
+                await fetchEvents();
+            } finally {
+                setValidatingEventId(null);
+            }
+        },
+        [
+            canValidateEvent,
+            fetchEvents,
+            getApiUrl,
+            getHeaders,
+            validatingEventId,
+        ]
+    );
+
     return (
         <div className="calendar-layout">
             <div className="navbar">
@@ -338,14 +466,37 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
                         className="navbar-menu-button"
                         type="button"
                         onClick={() => setIsActionMenuOpen(true)}
-                        aria-label="Ouvrir le menu"
+                        aria-label={
+                            hasPendingValidation
+                                ? `Ouvrir le menu (${formatPendingValidationLabel(
+                                      pendingValidationCounts.all
+                                  )})`
+                                : 'Ouvrir le menu'
+                        }
                         aria-haspopup="dialog"
                         aria-controls="calendar-action-menu"
                         aria-expanded={isActionMenuOpen}
                     >
-                        <span aria-hidden="true" />
-                        <span aria-hidden="true" />
-                        <span aria-hidden="true" />
+                        <span
+                            className="navbar-menu-button-line"
+                            aria-hidden="true"
+                        />
+                        <span
+                            className="navbar-menu-button-line"
+                            aria-hidden="true"
+                        />
+                        <span
+                            className="navbar-menu-button-line"
+                            aria-hidden="true"
+                        />
+                        {hasPendingValidation && (
+                            <span
+                                className="pending-validation-badge navbar-menu-validation-badge"
+                                aria-hidden="true"
+                            >
+                                {pendingValidationCounts.all}
+                            </span>
+                        )}
                     </button>
                 </div>
                 <h1>Bienvenue au CreaLab {emailToName(user.email)}</h1>
@@ -381,32 +532,42 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
                             </button>
                         </header>
                         <div className="action-menu-buttons">
-                            {viewEventButtons.map(({ scope, text }) => (
-                                <Button
-                                    key={scope}
-                                    component_type="secondary"
-                                    type="button"
-                                    text={text}
-                                    onClick={() => {
-                                        setIsActionMenuOpen(false);
-                                        setViewEventsScope(scope);
-                                    }}
-                                    aria-haspopup="dialog"
-                                    aria-expanded={viewEventsScope === scope}
-                                />
-                            ))}
-                            {isAdmin && (
-                                <Button
-                                    component_type="primary"
-                                    type="button"
-                                    text="Valider les événements"
-                                    onClick={() => {
-                                        setIsActionMenuOpen(false);
-                                        setIsValidateModalOpen(true);
-                                    }}
-                                    aria-haspopup="dialog"
-                                    aria-expanded={isValidateModalOpen}
-                                />
+                            {viewEventButtons.map(
+                                ({ scope, text, pendingValidationCount }) => (
+                                    <div
+                                        key={scope}
+                                        className="view-event-button-wrapper"
+                                    >
+                                        <Button
+                                            component_type="secondary"
+                                            type="button"
+                                            text={text}
+                                            onClick={() => {
+                                                setIsActionMenuOpen(false);
+                                                setViewEventsScope(scope);
+                                            }}
+                                            aria-haspopup="dialog"
+                                            aria-expanded={
+                                                viewEventsScope === scope
+                                            }
+                                            aria-label={
+                                                pendingValidationCount > 0
+                                                    ? `${text} (${formatPendingValidationLabel(
+                                                          pendingValidationCount
+                                                      )})`
+                                                    : undefined
+                                            }
+                                        />
+                                        {pendingValidationCount > 0 && (
+                                            <span
+                                                className="pending-validation-badge view-event-validation-badge"
+                                                aria-hidden="true"
+                                            >
+                                                {pendingValidationCount}
+                                            </span>
+                                        )}
+                                    </div>
+                                )
                             )}
                         </div>
                     </aside>
@@ -422,15 +583,9 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
                     canDeleteEvent={canDeleteEvent}
                     onDeleteEvent={handleDeleteEvent}
                     deletingEventId={deletingEventId}
-                />
-            )}
-            {isValidateModalOpen && (
-                <ModalValidateEvent
-                    isOpen={isValidateModalOpen}
-                    onClose={() => setIsValidateModalOpen(false)}
-                    eventInfo={events
-                        .filter((event) => !event.accepted)
-                        .map((event) => [event.id, event.title])}
+                    canValidateEvent={canValidateEvent}
+                    onValidateEvent={handleValidateEvent}
+                    validatingEventId={validatingEventId}
                 />
             )}
 
@@ -503,7 +658,6 @@ const CalendarLayout = ({ user }: CalendarLayoutProps) => {
 
             {!isModalOpen &&
                 !isViewModalOpen &&
-                !isValidateModalOpen &&
                 !isActionMenuOpen &&
                 !selectedEvent && (
                     <div className="open-modal-button-container">
