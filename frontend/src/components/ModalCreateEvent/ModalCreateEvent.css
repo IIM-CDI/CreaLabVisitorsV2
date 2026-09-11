@@ -52,6 +52,12 @@
     gap: 10px;
 }
 
+.modal-datetime-group .text-input,
+.modal-datetime-group .text-input-field {
+    min-width: 0;
+    max-width: 100%;
+}
+
 .modal-badge-input-container {
     display: flex;
     flex-direction: column;
@@ -101,11 +107,13 @@
 @media (max-width: 480px) {
     .modal-backdrop-create-event {
         align-items: flex-start;
-        padding: 12px;
+        padding: 24px 20px;
     }
 
     .modal-content-create-event {
         padding: 16px;
+        max-height: calc(100vh - 48px);
+        max-height: calc(100svh - 48px);
     }
 
     .modal-datetime-group {
